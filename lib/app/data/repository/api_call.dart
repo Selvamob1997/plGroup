@@ -105,7 +105,6 @@ class api_call {
 
   static Future<http.Response> getAllMaster(fromID, soNo, docEntry, userId, cardCode, status, isloading) async {
     if(isloading)Utility.showLoader();
-    //log('${IPAddress}getAllMaster');
     var headers = {"Content-Type": "application/json"};
     var body = {
       "FromId":fromID,
@@ -115,7 +114,7 @@ class api_call {
       "CradCode":cardCode,
       "Status":status
     };
-    log(jsonEncode(body));
+    print(body);
     try {
       final response = await http.post(
           Uri.parse('${IPAddress}getAllMaster'),
@@ -290,5 +289,51 @@ class api_call {
       throw Exception('Internet is down');
     }
   }
+
+
+
+
+
+  static Future<http.Response> getQrDetiles(type,prodCode,docEntry,bundle,lineID,isloading) async {
+
+    if(isloading)Utility.showLoader();
+    log('${IPAddress}getQrDetiles');
+    var headers = {"Content-Type": "application/json"};
+    var body = {
+      "Type":type,
+      "ProdCode": prodCode,
+      "DocEntry": docEntry,
+      "Bundle": bundle,
+      "LineID": lineID,
+    };
+    log(jsonEncode(body));
+    try {
+      final response = await http.post(
+          Uri.parse('${IPAddress}getQrDetiles'),
+          body: jsonEncode(body),
+          headers: headers);
+      return response;
+    } on SocketException {
+      throw Exception('Internet is down');
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

@@ -41,6 +41,8 @@ class DashBoardController extends GetxController{
       routemanagement.gotoPacking();
     }else if(i==2){
       routemanagement.gotoDispatched();
+    }else if(i==3){
+      routemanagement.gotoScaning();
     }
     update();
   }

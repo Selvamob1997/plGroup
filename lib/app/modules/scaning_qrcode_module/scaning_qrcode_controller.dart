@@ -1,27 +1,22 @@
-// ignore_for_file: non_constant_identifier_names, camel_case_types, prefer_typing_uninitialized_variables, depend_on_referenced_packages
-
 import 'dart:convert';
 import 'dart:developer';
+import 'package:pl_groups/app/data/repository/api_call.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:pl_groups/app/data/model/QualityModel.dart';
 import 'package:pl_groups/app/data/model/WarehouseModel.dart';
 import 'package:pl_groups/app/data/model/dispatch_bundle_model.dart';
 import 'package:pl_groups/app/data/model/dispatch_detail_model.dart';
-import 'package:pl_groups/app/data/repository/api_call.dart';
+import 'package:pl_groups/app/utils/utility.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import '../../utils/utility.dart';
-import '../splash_screen_module/splash_screen_controller.dart';
-import 'packing_screen_page.dart';
-import 'package:intl/intl.dart';
 
 
-class packingScreenController extends GetxController {
-
+class ScaningQrcodeController extends GetxController{
 
   List<dispatch_model> dispatch_table_list = [];
 
@@ -85,10 +80,7 @@ class packingScreenController extends GetxController {
     //print("dispatch scrn inside oninit");
 
     formatter = DateFormat('yyyyMMdd').format(DateTime.now());
-    //print(formatter.toString());
-    splashScreenController().dispose();
-    packingScreenController().initialized;
-    packingScreenController().
+
     update();
   }
 
@@ -98,8 +90,8 @@ class packingScreenController extends GetxController {
 
   Future<void> scanBarcode() async {
 
-     String barcodeScanRes='';
-     int count=0;
+    String barcodeScanRes='';
+    int count=0;
     try {
       barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
           '#ff6666', 'Cancel', true, ScanMode.QR);
@@ -109,975 +101,972 @@ class packingScreenController extends GetxController {
     } on PlatformException {
       barcodeScanRes = 'Failed to get platform version.';
     }
-     //barcodeScanRes = 'eyJIZWFkZXIgSXRlbSI6IjAwMDA0MiIsIlFSRG9jRW50cnkiOiIxMyIsIkxpbmVJRCI6IjEiLCJCdW5kbGUiOiJXQUwvUkVYNjkifQ==';
+    //barcodeScanRes = 'eyJIZWFkZXIgSXRlbSI6IjAwMDA0MiIsIlFSRG9jRW50cnkiOiIxMyIsIkxpbmVJRCI6IjEiLCJCdW5kbGUiOiJXQUwvUkVYNjkifQ==';
 
     String jsonString = utf8.decode(base64Decode(barcodeScanRes));
     Map<String, dynamic> jsonMap = jsonDecode(jsonString);
     var s = '';
-     s = jsonMap.toString();
+    s = jsonMap.toString();
 
-     var kv = s.substring(0, s.length - 1).substring(1).split(",");
-     final Map<String, String> pairs = {};
-     for (int i = 0; i < kv.length; i++) {
-       var thisKV = kv[i].split(":");
-       pairs[thisKV[0]] = thisKV[1].trim();
-     }
-     var encoded = json.encode(pairs);
-     //log(encoded);
-     final newdecode = jsonDecode(encoded);
-     rawQrScan = QrScan.fromJson(newdecode);
-     //print(decode["QRDocEntry"].toString());
+    var kv = s.substring(0, s.length - 1).substring(1).split(",");
+    final Map<String, String> pairs = {};
+    for (int i = 0; i < kv.length; i++) {
+      var thisKV = kv[i].split(":");
+      pairs[thisKV[0]] = thisKV[1].trim();
+    }
+    var encoded = json.encode(pairs);
+    //log(encoded);
+    final newdecode = jsonDecode(encoded);
+    rawQrScan = QrScan.fromJson(newdecode);
+    //print(decode["QRDocEntry"].toString());
     update();
-     var decode;
-     api_call.getQrDetiles("O", rawQrScan.headerItem, rawQrScan.qRDocEntry, rawQrScan.bundle, rawQrScan.lineID, true).then((value) => {
-       if(value.statusCode==200){
+    var decode;
+    api_call.getQrDetiles("O", rawQrScan.headerItem, rawQrScan.qRDocEntry, rawQrScan.bundle, rawQrScan.lineID, true).then((value) => {
+      if(value.statusCode==200){
 
-         decode= jsonDecode(value.body),
+        decode= jsonDecode(value.body),
+        secBundalScreen.clear(),
+        update(),
+        for(int j=0;j<secBundalScreen.length;j++){
+          if(secBundalScreen[j].productCode ==decode[0]["Header Item"].toString()){
+            count++,
+          }
+        },
 
-         //print(value.body),
-         //print(decode[0]["Header Item"].toString()),
-         //print(decode[0]['ItemCode'],),
-         update(),
-         for(int j=0;j<secBundalScreen.length;j++){
-           if(secBundalScreen[j].productCode ==decode[0]["Header Item"].toString()){
-             count++,
-           }
-         },
-
-         if(count==0){
-           if(decode[0]["Header Item"].toString()=="000001"){
-             secBundalScreen.add(
-               BundalScreen(
-                   decode[0]["Header Item"].toString(),//productCode,
-                   decode[0]["ItemCode"].toString(),//itemCode,
-                   formatter.toString(),//date,
-                   decode[0]["No of Sheets"].toString(),//varible1,
-                   "No of Sheets",//varible1Name,
-                   decode[0]["Quality"].toString(),//varible2,
-                   "Quality",//varible2Name,
-                   decode[0]["Density"].toString(),//varible3,
-                   "Density",//varible3Name,
-                   decode[0]["Length"].toString(),//varible4,
-                   "Length",//varible4Name,
-                   decode[0]["Width"].toString(),//varible5,
-                   "Width",//varible5Name,
-                   decode[0]["Thickness"].toString(),//varible6,
-                   "Thickness",//varible6Name,
-                   decode[0]["Weight"].toString(),//varible7,
-                   "Weight",//varible7Name,
-                   "",//varible8,
-                   "",//varible8Name,
-                   "",//varible9,
-                   "",// varible9Name,
-                   "",// varible10,
-                   "",//varible10Name,
-                   "",// varible11,
-                   "",//varible11Name,
-                   decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                   decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                   decode[0]["LineID"].toString(),//lineID,
-                   decode[0]["Bundle"].toString(),//bundle,
-                   0
-               ),
-             ),
+        if(count==0){
+          if(decode[0]["Header Item"].toString()=="000001"){
+            secBundalScreen.add(
+              BundalScreen(
+                  decode[0]["Header Item"].toString(),//productCode,
+                  decode[0]["ItemCode"].toString(),//itemCode,
+                  formatter.toString(),//date,
+                  decode[0]["No of Sheets"].toString(),//varible1,
+                  "No of Sheets",//varible1Name,
+                  decode[0]["Quality"].toString(),//varible2,
+                  "Quality",//varible2Name,
+                  decode[0]["Density"].toString(),//varible3,
+                  "Density",//varible3Name,
+                  decode[0]["Length"].toString(),//varible4,
+                  "Length",//varible4Name,
+                  decode[0]["Width"].toString(),//varible5,
+                  "Width",//varible5Name,
+                  decode[0]["Thickness"].toString(),//varible6,
+                  "Thickness",//varible6Name,
+                  decode[0]["Weight"].toString(),//varible7,
+                  "Weight",//varible7Name,
+                  "",//varible8,
+                  "",//varible8Name,
+                  "",//varible9,
+                  "",// varible9Name,
+                  "",// varible10,
+                  "",//varible10Name,
+                  "",// varible11,
+                  "",//varible11Name,
+                  decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                  decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                  decode[0]["LineID"].toString(),//lineID,
+                  decode[0]["Bundle"].toString(),//bundle,
+                  0
+              ),
+            ),
 
 
-           }
-           else if(decode[0]["Header Item"].toString()=="000002"){}
-           else if(decode[0]["Header Item"].toString()=="000003"){}
-           else if(decode[0]["Header Item"].toString()=="000004"){
-                 secBundalScreen.add(
-                   BundalScreen(
-                       decode[0]["Header Item"].toString(),//productCode,
-                       decode[0]["ItemCode"].toString(),//itemCode,
-                       formatter.toString(),//date,
-                       decode[0]["GSM"].toString(),//varible1,
-                       "GSM",//varible1Name,
-                       decode[0]["Width"].toString(),//varible2,
-                       "Width",//varible2Name,
-                       decode[0]["Length"].toString(),//varible3,
-                       "Length",//varible3Name,
-                       decode[0]["Colour"].toString(),//varible4,
-                       "Colour",//varible4Name,
-                       decode[0]["Grade"].toString(),//varible5,
-                       "Grade",//varible5Name,
-                       decode[0]["Lamination"].toString(),//varible6,
-                       "Lamination",//varible6Name,
-                       decode[0]["Weight"].toString(),//varible7,
-                       "Weight",//varible7Name,
-                       "",//varible8,
-                       "",//varible8Name,
-                       "",//varible9,
-                       "",// varible9Name,
-                       "",// varible10,
-                       "",//varible10Name,
-                       "",// varible11,
-                       "",//varible11Name,
-                       decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                       decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                       decode[0]["LineID"].toString(),//lineID,
-                       decode[0]["Bundle"].toString(),//bundle
-                       0
-                   ),
-                 ),
+          }
+          else if(decode[0]["Header Item"].toString()=="000002"){}
+          else if(decode[0]["Header Item"].toString()=="000003"){}
+            else if(decode[0]["Header Item"].toString()=="000004"){
+                secBundalScreen.add(
+                  BundalScreen(
+                      decode[0]["Header Item"].toString(),//productCode,
+                      decode[0]["ItemCode"].toString(),//itemCode,
+                      formatter.toString(),//date,
+                      decode[0]["GSM"].toString(),//varible1,
+                      "GSM",//varible1Name,
+                      decode[0]["Width"].toString(),//varible2,
+                      "Width",//varible2Name,
+                      decode[0]["Length"].toString(),//varible3,
+                      "Length",//varible3Name,
+                      decode[0]["Colour"].toString(),//varible4,
+                      "Colour",//varible4Name,
+                      decode[0]["Grade"].toString(),//varible5,
+                      "Grade",//varible5Name,
+                      decode[0]["Lamination"].toString(),//varible6,
+                      "Lamination",//varible6Name,
+                      decode[0]["Weight"].toString(),//varible7,
+                      "Weight",//varible7Name,
+                      "",//varible8,
+                      "",//varible8Name,
+                      "",//varible9,
+                      "",// varible9Name,
+                      "",// varible10,
+                      "",//varible10Name,
+                      "",// varible11,
+                      "",//varible11Name,
+                      decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                      decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                      decode[0]["LineID"].toString(),//lineID,
+                      decode[0]["Bundle"].toString(),//bundle
+                      0
+                  ),
+                ),
 
-               }
-           else if(decode[0]["Header Item"].toString()=="000005"){
-                   secBundalScreen.add(
-                     BundalScreen(
-                         decode[0]["Header Item"].toString(),//productCode,
-                         decode[0]["ItemCode"].toString(),//itemCode,
-                         formatter.toString(),//date,
-                         decode[0]["Micron"].toString(),//varible1,
-                         "Micron",//varible1Name,
-                         decode[0]["Width"].toString(),//varible2,
-                         "Width",//varible2Name,
-                         decode[0]["Length"].toString(),//varible3,
-                         "Length",//varible3Name,
-                         decode[0]["Colour"].toString(),//varible4,
-                         "Colour",//varible4Name,
-                         decode[0]["Weight"].toString(),//varible5,
-                         "Weight",//varible5Name,
-                         "",//varible6,
-                         "",//varible6Name,
-                         "",//varible7,
-                         "",//varible7Name,
-                         "",//varible8,
-                         "",//varible8Name,
-                         "",//varible9,
-                         "",// varible9Name,
-                         "",// varible10,
-                         "",//varible10Name,
-                         "",// varible11,
-                         "",//varible11Name,
-                         decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                         decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                         decode[0]["LineID"].toString(),//lineID,
-                         decode[0]["Bundle"].toString(),//bundle
-                         0
-                     ),
-                   ),
-                 }
-           else if(decode[0]["Header Item"].toString()=="000006"){
-                     secBundalScreen.add(
-                       BundalScreen(
-                           decode[0]["Header Item"].toString(),//productCode,
-                           decode[0]["ItemCode"].toString(),//itemCode,
-                           formatter.toString(),//date,
-                           decode[0]["Quality"].toString(),//varible1,
-                           "Quality",//varible1Name,
-                           decode[0]["Length"].toString(),//varible2,
-                           "Length",//varible2Name,
-                           decode[0]["Width"].toString(),//varible3,
-                           "Width",//varible3Name,
-                           decode[0]["Thickness"].toString(),//varible4,
-                           "Thickness",//varible4Name,
-                           decode[0]["Weight"].toString(),//varible5,
-                           "Weight",//varible5Name,
-                           "",//varible6,
-                           "",//varible6Name,
-                           "",//varible7,
-                           "",//varible7Name,
-                           "",//varible8,
-                           "",//varible8Name,
-                           "",//varible9,
-                           "",// varible9Name,
-                           "",// varible10,
-                           "",//varible10Name,
-                           "",// varible11,
-                           "",//varible11Name,
-                           decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                           decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                           decode[0]["LineID"].toString(),//lineID,
-                           decode[0]["Bundle"].toString(),//bundle
-                           0
-                       ),
-                     ),
+              }
+              else if(decode[0]["Header Item"].toString()=="000005"){
+                  secBundalScreen.add(
+                    BundalScreen(
+                        decode[0]["Header Item"].toString(),//productCode,
+                        decode[0]["ItemCode"].toString(),//itemCode,
+                        formatter.toString(),//date,
+                        decode[0]["Micron"].toString(),//varible1,
+                        "Micron",//varible1Name,
+                        decode[0]["Width"].toString(),//varible2,
+                        "Width",//varible2Name,
+                        decode[0]["Length"].toString(),//varible3,
+                        "Length",//varible3Name,
+                        decode[0]["Colour"].toString(),//varible4,
+                        "Colour",//varible4Name,
+                        decode[0]["Weight"].toString(),//varible5,
+                        "Weight",//varible5Name,
+                        "",//varible6,
+                        "",//varible6Name,
+                        "",//varible7,
+                        "",//varible7Name,
+                        "",//varible8,
+                        "",//varible8Name,
+                        "",//varible9,
+                        "",// varible9Name,
+                        "",// varible10,
+                        "",//varible10Name,
+                        "",// varible11,
+                        "",//varible11Name,
+                        decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                        decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                        decode[0]["LineID"].toString(),//lineID,
+                        decode[0]["Bundle"].toString(),//bundle
+                        0
+                    ),
+                  ),
+                }
+                else if(decode[0]["Header Item"].toString()=="000006"){
+                    secBundalScreen.add(
+                      BundalScreen(
+                          decode[0]["Header Item"].toString(),//productCode,
+                          decode[0]["ItemCode"].toString(),//itemCode,
+                          formatter.toString(),//date,
+                          decode[0]["Quality"].toString(),//varible1,
+                          "Quality",//varible1Name,
+                          decode[0]["Length"].toString(),//varible2,
+                          "Length",//varible2Name,
+                          decode[0]["Width"].toString(),//varible3,
+                          "Width",//varible3Name,
+                          decode[0]["Thickness"].toString(),//varible4,
+                          "Thickness",//varible4Name,
+                          decode[0]["Weight"].toString(),//varible5,
+                          "Weight",//varible5Name,
+                          "",//varible6,
+                          "",//varible6Name,
+                          "",//varible7,
+                          "",//varible7Name,
+                          "",//varible8,
+                          "",//varible8Name,
+                          "",//varible9,
+                          "",// varible9Name,
+                          "",// varible10,
+                          "",//varible10Name,
+                          "",// varible11,
+                          "",//varible11Name,
+                          decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                          decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                          decode[0]["LineID"].toString(),//lineID,
+                          decode[0]["Bundle"].toString(),//bundle
+                          0
+                      ),
+                    ),
 
-                   }
-           else if(decode[0]["Header Item"].toString()=="000007"){
-                       secBundalScreen.add(
-                         BundalScreen(
-                           decode[0]["Header Item"].toString(),//productCode,
-                           decode[0]["ItemCode"].toString(),//itemCode,
-                           formatter.toString(),//date,
-                           decode[0]["Quality"].toString(),//varible1,
-                           "Quality",//varible1Name,
-                           decode[0]["Length"].toString(),//varible2,
-                           "Length",//varible2Name,
-                           decode[0]["Width"].toString(),//varible3,
-                           "Width",//varible3Name,
-                           decode[0]["Thickness"].toString(),//varible4,
-                           "Thickness",//varible4Name,
-                           decode[0]["Weight"].toString(),//varible5,
-                           "Weight",//varible5Name,
-                           "",//varible6,
-                           "",//varible6Name,
-                           "",//varible7,
-                           "",//varible7Name,
-                           "",//varible8,
-                           "",//varible8Name,
-                           "",//varible9,
-                           "",// varible9Name,
-                           "",// varible10,
-                           "",//varible10Name,
-                           "",// varible11,
-                           "",//varible11Name,
-                           decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                           decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                           decode[0]["LineID"].toString(),//lineID,
-                           decode[0]["Bundle"].toString(),//bundle
-                           0,
-                         ),
-                       ),
+                  }
+                  else if(decode[0]["Header Item"].toString()=="000007"){
+                      secBundalScreen.add(
+                        BundalScreen(
+                          decode[0]["Header Item"].toString(),//productCode,
+                          decode[0]["ItemCode"].toString(),//itemCode,
+                          formatter.toString(),//date,
+                          decode[0]["Quality"].toString(),//varible1,
+                          "Quality",//varible1Name,
+                          decode[0]["Length"].toString(),//varible2,
+                          "Length",//varible2Name,
+                          decode[0]["Width"].toString(),//varible3,
+                          "Width",//varible3Name,
+                          decode[0]["Thickness"].toString(),//varible4,
+                          "Thickness",//varible4Name,
+                          decode[0]["Weight"].toString(),//varible5,
+                          "Weight",//varible5Name,
+                          "",//varible6,
+                          "",//varible6Name,
+                          "",//varible7,
+                          "",//varible7Name,
+                          "",//varible8,
+                          "",//varible8Name,
+                          "",//varible9,
+                          "",// varible9Name,
+                          "",// varible10,
+                          "",//varible10Name,
+                          "",// varible11,
+                          "",//varible11Name,
+                          decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                          decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                          decode[0]["LineID"].toString(),//lineID,
+                          decode[0]["Bundle"].toString(),//bundle
+                          0,
+                        ),
+                      ),
 
-                     }
-           else if(decode[0]["Header Item"].toString()=="000008"){
-                         secBundalScreen.add(
-                           BundalScreen(
-                             decode[0]["Header Item"].toString(),//productCode,
-                             decode[0]["ItemCode"].toString(),//itemCode,
-                             formatter.toString(),//date,
-                             decode[0]["Quality"].toString(),//varible1,
-                             "Quality",//varible1Name,
-                             decode[0]["Length"].toString(),//varible2,
-                             "Length",//varible2Name,
-                             decode[0]["Width"].toString(),//varible3,
-                             "Width",//varible3Name,
-                             decode[0]["Thickness"].toString(),//varible4,
-                             "Thickness",//varible4Name,
-                             decode[0]["Weight"].toString(),//varible5,
-                             "Weight",//varible5Name,
-                             "",//varible6,
-                             "",//varible6Name,
-                             "",//varible7,
-                             "",//varible7Name,
-                             "",//varible8,
-                             "",//varible8Name,
-                             "",//varible9,
-                             "",// varible9Name,
-                             "",// varible10,
-                             "",//varible10Name,
-                             "",// varible11,
-                             "",//varible11Name,
-                             decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                             decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                             decode[0]["LineID"].toString(),//lineID,
-                             decode[0]["Bundle"].toString(),//bundle
-                             0,
-                           ),
-                         ),
+                    }
+                    else if(decode[0]["Header Item"].toString()=="000008"){
+                        secBundalScreen.add(
+                          BundalScreen(
+                            decode[0]["Header Item"].toString(),//productCode,
+                            decode[0]["ItemCode"].toString(),//itemCode,
+                            formatter.toString(),//date,
+                            decode[0]["Quality"].toString(),//varible1,
+                            "Quality",//varible1Name,
+                            decode[0]["Length"].toString(),//varible2,
+                            "Length",//varible2Name,
+                            decode[0]["Width"].toString(),//varible3,
+                            "Width",//varible3Name,
+                            decode[0]["Thickness"].toString(),//varible4,
+                            "Thickness",//varible4Name,
+                            decode[0]["Weight"].toString(),//varible5,
+                            "Weight",//varible5Name,
+                            "",//varible6,
+                            "",//varible6Name,
+                            "",//varible7,
+                            "",//varible7Name,
+                            "",//varible8,
+                            "",//varible8Name,
+                            "",//varible9,
+                            "",// varible9Name,
+                            "",// varible10,
+                            "",//varible10Name,
+                            "",// varible11,
+                            "",//varible11Name,
+                            decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                            decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                            decode[0]["LineID"].toString(),//lineID,
+                            decode[0]["Bundle"].toString(),//bundle
+                            0,
+                          ),
+                        ),
 
-                       }
-           else if(decode[0]["Header Item"].toString()=="000009"){
-                           secBundalScreen.add(
-                             BundalScreen(
-                               decode[0]["Header Item"].toString(),//productCode,
-                               decode[0]["ItemCode"].toString(),//itemCode,
-                               formatter.toString(),//date,
-                               decode[0]["Quality"].toString(),//varible1,
-                               "Quality",//varible1Name,
-                               decode[0]["Quantity"].toString(),//varible2,
-                               "Quantity",//varible2Name,
-                               decode[0]["Weight"].toString(),//varible3,
-                               "Weight",//varible3Name,
-                               "",//varible4,
-                               "",//varible4Name,
-                               "",//varible5,
-                               "",//varible5Name,
-                               "",//varible6,
-                               "",//varible6Name,
-                               "",//varible7,
-                               "",//varible7Name,
-                               "",//varible8,
-                               "",//varible8Name,
-                               "",//varible9,
-                               "",// varible9Name,
-                               "",// varible10,
-                               "",//varible10Name,
-                               "",// varible11,
-                               "",//varible11Name,
-                               decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                               decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                               decode[0]["LineID"].toString(),//lineID,
-                               decode[0]["Bundle"].toString(),//bundle
-                               0,
-                             ),
-                           ),
+                      }
+                      else if(decode[0]["Header Item"].toString()=="000009"){
+                          secBundalScreen.add(
+                            BundalScreen(
+                              decode[0]["Header Item"].toString(),//productCode,
+                              decode[0]["ItemCode"].toString(),//itemCode,
+                              formatter.toString(),//date,
+                              decode[0]["Quality"].toString(),//varible1,
+                              "Quality",//varible1Name,
+                              decode[0]["Quantity"].toString(),//varible2,
+                              "Quantity",//varible2Name,
+                              decode[0]["Weight"].toString(),//varible3,
+                              "Weight",//varible3Name,
+                              "",//varible4,
+                              "",//varible4Name,
+                              "",//varible5,
+                              "",//varible5Name,
+                              "",//varible6,
+                              "",//varible6Name,
+                              "",//varible7,
+                              "",//varible7Name,
+                              "",//varible8,
+                              "",//varible8Name,
+                              "",//varible9,
+                              "",// varible9Name,
+                              "",// varible10,
+                              "",//varible10Name,
+                              "",// varible11,
+                              "",//varible11Name,
+                              decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                              decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                              decode[0]["LineID"].toString(),//lineID,
+                              decode[0]["Bundle"].toString(),//bundle
+                              0,
+                            ),
+                          ),
 
-                         }
-           else if(decode[0]["Header Item"].toString()=="000010"){
-                             secBundalScreen.add(
-                               BundalScreen(
-                                 decode[0]["Header Item"].toString(),//productCode,
-                                 decode[0]["ItemCode"].toString(),//itemCode,
-                                 formatter.toString(),//date,
-                                 decode[0]["Quality"].toString(),//varible1,
-                                 "Quality",//varible1Name,
-                                 decode[0]["Colour"].toString(),//varible2,
-                                 "Colour",//varible2Name,
-                                 decode[0]["Quantity"].toString(),//varible3,
-                                 "Quantity",//varible3Name,
-                                 decode[0]["Weight"].toString(),//varible4,
-                                 "Weight",//varible4Name,
-                                 "",//varible5,
-                                 "",//varible5Name,
-                                 "",//varible6,
-                                 "",//varible6Name,
-                                 "",//varible7,
-                                 "",//varible7Name,
-                                 "",//varible8,
-                                 "",//varible8Name,
-                                 "",//varible9,
-                                 "",// varible9Name,
-                                 "",// varible10,
-                                 "",//varible10Name,
-                                 "",// varible11,
-                                 "",//varible11Name,
-                                 decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                 decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                 decode[0]["LineID"].toString(),//lineID,
-                                 decode[0]["Bundle"].toString(),//bundle
-                                 0,
-                               ),
-                             ),
-                           }
-           else if(decode[0]["Header Item"].toString()=="000011"){
-                               secBundalScreen.add(
-                                 BundalScreen(
-                                   decode[0]["Header Item"].toString(),//productCode,
-                                   decode[0]["ItemCode"].toString(),//itemCode,
-                                   formatter.toString(),//date,
-                                   decode[0]["Quality"].toString(),//varible1,
-                                   "Quality",//varible1Name,
-                                   decode[0]["Quantity"].toString(),//varible2,
-                                   "Quantity",//varible2Name,
-                                   decode[0]["Weight"].toString(),//varible3,
-                                   "Weight",//varible3Name,
-                                   "",//varible4,
-                                   "",//varible4Name,
-                                   "",//varible5,
-                                   "",//varible5Name,
-                                   "",//varible6,
-                                   "",//varible6Name,
-                                   "",//varible7,
-                                   "",//varible7Name,
-                                   "",//varible8,
-                                   "",//varible8Name,
-                                   "",//varible9,
-                                   "",// varible9Name,
-                                   "",// varible10,
-                                   "",//varible10Name,
-                                   "",// varible11,
-                                   "",//varible11Name,
-                                   decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                   decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                   decode[0]["LineID"].toString(),//lineID,
-                                   decode[0]["Bundle"].toString(),//bundle
-                                   0,
-                                 ),
-                               ),
+                        }
+                        else if(decode[0]["Header Item"].toString()=="000010"){
+                            secBundalScreen.add(
+                              BundalScreen(
+                                decode[0]["Header Item"].toString(),//productCode,
+                                decode[0]["ItemCode"].toString(),//itemCode,
+                                formatter.toString(),//date,
+                                decode[0]["Quality"].toString(),//varible1,
+                                "Quality",//varible1Name,
+                                decode[0]["Colour"].toString(),//varible2,
+                                "Colour",//varible2Name,
+                                decode[0]["Quantity"].toString(),//varible3,
+                                "Quantity",//varible3Name,
+                                decode[0]["Weight"].toString(),//varible4,
+                                "Weight",//varible4Name,
+                                "",//varible5,
+                                "",//varible5Name,
+                                "",//varible6,
+                                "",//varible6Name,
+                                "",//varible7,
+                                "",//varible7Name,
+                                "",//varible8,
+                                "",//varible8Name,
+                                "",//varible9,
+                                "",// varible9Name,
+                                "",// varible10,
+                                "",//varible10Name,
+                                "",// varible11,
+                                "",//varible11Name,
+                                decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                decode[0]["LineID"].toString(),//lineID,
+                                decode[0]["Bundle"].toString(),//bundle
+                                0,
+                              ),
+                            ),
+                          }
+                          else if(decode[0]["Header Item"].toString()=="000011"){
+                              secBundalScreen.add(
+                                BundalScreen(
+                                  decode[0]["Header Item"].toString(),//productCode,
+                                  decode[0]["ItemCode"].toString(),//itemCode,
+                                  formatter.toString(),//date,
+                                  decode[0]["Quality"].toString(),//varible1,
+                                  "Quality",//varible1Name,
+                                  decode[0]["Quantity"].toString(),//varible2,
+                                  "Quantity",//varible2Name,
+                                  decode[0]["Weight"].toString(),//varible3,
+                                  "Weight",//varible3Name,
+                                  "",//varible4,
+                                  "",//varible4Name,
+                                  "",//varible5,
+                                  "",//varible5Name,
+                                  "",//varible6,
+                                  "",//varible6Name,
+                                  "",//varible7,
+                                  "",//varible7Name,
+                                  "",//varible8,
+                                  "",//varible8Name,
+                                  "",//varible9,
+                                  "",// varible9Name,
+                                  "",// varible10,
+                                  "",//varible10Name,
+                                  "",// varible11,
+                                  "",//varible11Name,
+                                  decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                  decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                  decode[0]["LineID"].toString(),//lineID,
+                                  decode[0]["Bundle"].toString(),//bundle
+                                  0,
+                                ),
+                              ),
 
-                             }
-           else if(decode[0]["Header Item"].toString()=="000012"){
-                                 secBundalScreen.add(
-                                   BundalScreen(
-                                     decode[0]["Header Item"].toString(),//productCode,
-                                     decode[0]["ItemCode"].toString(),//itemCode,
-                                     formatter.toString(),//date,
-                                     decode[0]["Quality"].toString(),//varible1,
-                                     "Quality",//varible1Name,
-                                     decode[0]["Quantity"].toString(),//varible2,
-                                     "Quantity",//varible2Name,
-                                     decode[0]["TypeOfCan"].toString(),//varible3,
-                                     "TypeOfCan",//varible3Name,
-                                     decode[0]["Weight"].toString(),//varible4,
-                                     "Weight",//varible4Name,
-                                     "",//varible5,
-                                     "",//varible5Name,
-                                     "",//varible6,
-                                     "",//varible6Name,
-                                     "",//varible7,
-                                     "",//varible7Name,
-                                     "",//varible8,
-                                     "",//varible8Name,
-                                     "",//varible9,
-                                     "",// varible9Name,
-                                     "",// varible10,
-                                     "",//varible10Name,
-                                     "",// varible11,
-                                     "",//varible11Name,
-                                     decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                     decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                     decode[0]["LineID"].toString(),//lineID,
-                                     decode[0]["Bundle"].toString(),//bundle
-                                     0,
-                                   ),
-                                 ),
-                               }
-           else if(decode[0]["Header Item"].toString()=="000013"){
-                                   secBundalScreen.add(
-                                     BundalScreen(
-                                       decode[0]["Header Item"].toString(),//productCode,
-                                       decode[0]["ItemCode"].toString(),//itemCode,
-                                       formatter.toString(),//date,
-                                       decode[0]["Density"].toString(),//varible1,
-                                       "Density",//varible1Name,
-                                       decode[0]["Quality"].toString(),//varible2,
-                                       "Quality",//varible2Name,
-                                       decode[0]["Length"].toString(),//varible3,
-                                       "Length",//varible3Name,
-                                       decode[0]["Width"].toString(),//varible4,
-                                       "Width",//varible4Name,
-                                       decode[0]["Thickness"].toString(),//varible5,
-                                       "Thickness",//varible5Name,
-                                       decode[0]["Walling"].toString(),//varible6,
-                                       "Walling",//varible6Name,
-                                       decode[0]["Hessain"].toString(),//varible7,
-                                       "Hessain",//varible7Name,
-                                       decode[0]["Quantity"].toString(),//varible8,
-                                       "Quantity",//varible8Name,
-                                       decode[0]["Weight"].toString(),//varible9,
-                                       "Weight",// varible9Name,
-                                       "",// varible10,
-                                       "",//varible10Name,
-                                       "",// varible11,
-                                       "",//varible11Name,
-                                       decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                       decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                       decode[0]["LineID"].toString(),//lineID,
-                                       decode[0]["Bundle"].toString(),//bundle
-                                       0,
-                                     ),
-                                   ),
-                                 }
-           else if(decode[0]["Header Item"].toString()=="000014"){
-                                     secBundalScreen.add(
-                                       BundalScreen(
-                                         decode[0]["Header Item"].toString(),//productCode,
-                                         decode[0]["ItemCode"].toString(),//itemCode,
-                                         formatter.toString(),//date,
-                                         decode[0]["Density"].toString(),//varible1,
-                                         "Density",//varible1Name,
-                                         decode[0]["Quality"].toString(),//varible2,
-                                         "Quality",//varible2Name,
-                                         decode[0]["Length"].toString(),//varible3,
-                                         "Length",//varible3Name,
-                                         decode[0]["Width"].toString(),//varible4,
-                                         "Width",//varible4Name,
-                                         decode[0]["Thickness"].toString(),//varible5,
-                                         "Thickness",//varible5Name,
-                                         decode[0]["Walling"].toString(),//varible6,
-                                         "Walling",//varible6Name,
-                                         decode[0]["Hessain"].toString(),//varible7,
-                                         "Hessain",//varible7Name,
-                                         decode[0]["Quantity"].toString(),//varible8,
-                                         "Quantity",//varible8Name,
-                                         decode[0]["Weight"].toString(),//varible9,
-                                         "Weight",// varible9Name,
-                                         "",// varible10,
-                                         "",//varible10Name,
-                                         "",// varible11,
-                                         "",//varible11Name,
-                                         decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                         decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                         decode[0]["LineID"].toString(),//lineID,
-                                         decode[0]["Bundle"].toString(),//bundle
-                                         0,
-                                       ),
-                                     ),
-                                   }
-           else if(decode[0]["Header Item"].toString()=="000015"){
-                                       secBundalScreen.add(
-                                         BundalScreen(
-                                           decode[0]["Header Item"].toString(),//productCode,
-                                           decode[0]["ItemCode"].toString(),//itemCode,
-                                           formatter.toString(),//date,
-                                           decode[0]["Quality"].toString(),//varible1,
-                                           "Quality",//varible1Name,
-                                           decode[0]["GSM"].toString(),//varible2,
-                                           "GSM",//varible2Name,
-                                           decode[0]["Width"].toString(),//varible3,
-                                           "Width",//varible3Name,
-                                           decode[0]["Length"].toString(),//varible4,
-                                           "Length",//varible4Name,
-                                           decode[0]["Quantity"].toString(),//varible5,
-                                           "Quantity",//varible5Name,
-                                           decode[0]["Weight"].toString(),//varible6,
-                                           "Weight",//varible6Name,
-                                           "",//varible7,
-                                           "",//varible7Name,
-                                           "",//varible8,
-                                           "",//varible8Name,
-                                           "",//varible9,
-                                           "",// varible9Name,
-                                           "",// varible10,
-                                           "",//varible10Name,
-                                           "",// varible11,
-                                           "",//varible11Name,
-                                           decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                           decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                           decode[0]["LineID"].toString(),//lineID,
-                                           decode[0]["Bundle"].toString(),//bundle
-                                           0,
-                                         ),
-                                       ),
-                                     }
-           else if(decode[0]["Header Item"].toString()=="000016"){
-                                         secBundalScreen.add(
-                                           BundalScreen(
-                                             decode[0]["Header Item"].toString(),//productCode,
-                                             decode[0]["ItemCode"].toString(),//itemCode,
-                                             formatter.toString(),//date,
-                                             decode[0]["Quality"].toString(),//varible1,
-                                             "Quality",//varible1Name,
-                                             decode[0]["GSM"].toString(),//varible2,
-                                             "GSM",//varible2Name,
-                                             decode[0]["Width"].toString(),//varible3,
-                                             "Width",//varible3Name,
-                                             decode[0]["Length"].toString(),//varible4,
-                                             "Length",//varible4Name,
-                                             decode[0]["Quantity"].toString(),//varible5,
-                                             "Quantity",//varible5Name,
-                                             decode[0]["Weight"].toString(),//varible6,
-                                             "Weight",//varible6Name,
-                                             "",//varible7,
-                                             "",//varible7Name,
-                                             "",//varible8,
-                                             "",//varible8Name,
-                                             "",//varible9,
-                                             "",// varible9Name,
-                                             "",// varible10,
-                                             "",//varible10Name,
-                                             "",// varible11,
-                                             "",//varible11Name,
-                                             decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                             decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                             decode[0]["LineID"].toString(),//lineID,
-                                             decode[0]["Bundle"].toString(),//bundle
-                                             0,
-                                           ),
-                                         ),
-                                       }
-           else if(decode[0]["Header Item"].toString()=="000017"){
+                            }
+                            else if(decode[0]["Header Item"].toString()=="000012"){
+                                secBundalScreen.add(
+                                  BundalScreen(
+                                    decode[0]["Header Item"].toString(),//productCode,
+                                    decode[0]["ItemCode"].toString(),//itemCode,
+                                    formatter.toString(),//date,
+                                    decode[0]["Quality"].toString(),//varible1,
+                                    "Quality",//varible1Name,
+                                    decode[0]["Quantity"].toString(),//varible2,
+                                    "Quantity",//varible2Name,
+                                    decode[0]["TypeOfCan"].toString(),//varible3,
+                                    "TypeOfCan",//varible3Name,
+                                    decode[0]["Weight"].toString(),//varible4,
+                                    "Weight",//varible4Name,
+                                    "",//varible5,
+                                    "",//varible5Name,
+                                    "",//varible6,
+                                    "",//varible6Name,
+                                    "",//varible7,
+                                    "",//varible7Name,
+                                    "",//varible8,
+                                    "",//varible8Name,
+                                    "",//varible9,
+                                    "",// varible9Name,
+                                    "",// varible10,
+                                    "",//varible10Name,
+                                    "",// varible11,
+                                    "",//varible11Name,
+                                    decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                    decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                    decode[0]["LineID"].toString(),//lineID,
+                                    decode[0]["Bundle"].toString(),//bundle
+                                    0,
+                                  ),
+                                ),
+                              }
+                              else if(decode[0]["Header Item"].toString()=="000013"){
+                                  secBundalScreen.add(
+                                    BundalScreen(
+                                      decode[0]["Header Item"].toString(),//productCode,
+                                      decode[0]["ItemCode"].toString(),//itemCode,
+                                      formatter.toString(),//date,
+                                      decode[0]["Density"].toString(),//varible1,
+                                      "Density",//varible1Name,
+                                      decode[0]["Quality"].toString(),//varible2,
+                                      "Quality",//varible2Name,
+                                      decode[0]["Length"].toString(),//varible3,
+                                      "Length",//varible3Name,
+                                      decode[0]["Width"].toString(),//varible4,
+                                      "Width",//varible4Name,
+                                      decode[0]["Thickness"].toString(),//varible5,
+                                      "Thickness",//varible5Name,
+                                      decode[0]["Walling"].toString(),//varible6,
+                                      "Walling",//varible6Name,
+                                      decode[0]["Hessain"].toString(),//varible7,
+                                      "Hessain",//varible7Name,
+                                      decode[0]["Quantity"].toString(),//varible8,
+                                      "Quantity",//varible8Name,
+                                      decode[0]["Weight"].toString(),//varible9,
+                                      "Weight",// varible9Name,
+                                      "",// varible10,
+                                      "",//varible10Name,
+                                      "",// varible11,
+                                      "",//varible11Name,
+                                      decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                      decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                      decode[0]["LineID"].toString(),//lineID,
+                                      decode[0]["Bundle"].toString(),//bundle
+                                      0,
+                                    ),
+                                  ),
+                                }
+                                else if(decode[0]["Header Item"].toString()=="000014"){
+                                    secBundalScreen.add(
+                                      BundalScreen(
+                                        decode[0]["Header Item"].toString(),//productCode,
+                                        decode[0]["ItemCode"].toString(),//itemCode,
+                                        formatter.toString(),//date,
+                                        decode[0]["Density"].toString(),//varible1,
+                                        "Density",//varible1Name,
+                                        decode[0]["Quality"].toString(),//varible2,
+                                        "Quality",//varible2Name,
+                                        decode[0]["Length"].toString(),//varible3,
+                                        "Length",//varible3Name,
+                                        decode[0]["Width"].toString(),//varible4,
+                                        "Width",//varible4Name,
+                                        decode[0]["Thickness"].toString(),//varible5,
+                                        "Thickness",//varible5Name,
+                                        decode[0]["Walling"].toString(),//varible6,
+                                        "Walling",//varible6Name,
+                                        decode[0]["Hessain"].toString(),//varible7,
+                                        "Hessain",//varible7Name,
+                                        decode[0]["Quantity"].toString(),//varible8,
+                                        "Quantity",//varible8Name,
+                                        decode[0]["Weight"].toString(),//varible9,
+                                        "Weight",// varible9Name,
+                                        "",// varible10,
+                                        "",//varible10Name,
+                                        "",// varible11,
+                                        "",//varible11Name,
+                                        decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                        decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                        decode[0]["LineID"].toString(),//lineID,
+                                        decode[0]["Bundle"].toString(),//bundle
+                                        0,
+                                      ),
+                                    ),
+                                  }
+                                  else if(decode[0]["Header Item"].toString()=="000015"){
+                                      secBundalScreen.add(
+                                        BundalScreen(
+                                          decode[0]["Header Item"].toString(),//productCode,
+                                          decode[0]["ItemCode"].toString(),//itemCode,
+                                          formatter.toString(),//date,
+                                          decode[0]["Quality"].toString(),//varible1,
+                                          "Quality",//varible1Name,
+                                          decode[0]["GSM"].toString(),//varible2,
+                                          "GSM",//varible2Name,
+                                          decode[0]["Width"].toString(),//varible3,
+                                          "Width",//varible3Name,
+                                          decode[0]["Length"].toString(),//varible4,
+                                          "Length",//varible4Name,
+                                          decode[0]["Quantity"].toString(),//varible5,
+                                          "Quantity",//varible5Name,
+                                          decode[0]["Weight"].toString(),//varible6,
+                                          "Weight",//varible6Name,
+                                          "",//varible7,
+                                          "",//varible7Name,
+                                          "",//varible8,
+                                          "",//varible8Name,
+                                          "",//varible9,
+                                          "",// varible9Name,
+                                          "",// varible10,
+                                          "",//varible10Name,
+                                          "",// varible11,
+                                          "",//varible11Name,
+                                          decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                          decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                          decode[0]["LineID"].toString(),//lineID,
+                                          decode[0]["Bundle"].toString(),//bundle
+                                          0,
+                                        ),
+                                      ),
+                                    }
+                                    else if(decode[0]["Header Item"].toString()=="000016"){
+                                        secBundalScreen.add(
+                                          BundalScreen(
+                                            decode[0]["Header Item"].toString(),//productCode,
+                                            decode[0]["ItemCode"].toString(),//itemCode,
+                                            formatter.toString(),//date,
+                                            decode[0]["Quality"].toString(),//varible1,
+                                            "Quality",//varible1Name,
+                                            decode[0]["GSM"].toString(),//varible2,
+                                            "GSM",//varible2Name,
+                                            decode[0]["Width"].toString(),//varible3,
+                                            "Width",//varible3Name,
+                                            decode[0]["Length"].toString(),//varible4,
+                                            "Length",//varible4Name,
+                                            decode[0]["Quantity"].toString(),//varible5,
+                                            "Quantity",//varible5Name,
+                                            decode[0]["Weight"].toString(),//varible6,
+                                            "Weight",//varible6Name,
+                                            "",//varible7,
+                                            "",//varible7Name,
+                                            "",//varible8,
+                                            "",//varible8Name,
+                                            "",//varible9,
+                                            "",// varible9Name,
+                                            "",// varible10,
+                                            "",//varible10Name,
+                                            "",// varible11,
+                                            "",//varible11Name,
+                                            decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                            decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                            decode[0]["LineID"].toString(),//lineID,
+                                            decode[0]["Bundle"].toString(),//bundle
+                                            0,
+                                          ),
+                                        ),
+                                      }
+                                      else if(decode[0]["Header Item"].toString()=="000017"){
 
-                                           secBundalScreen.add(
-                                             BundalScreen(
-                                               decode[0]["Header Item"].toString(),//productCode,
-                                               decode[0]["ItemCode"].toString(),//itemCode,
-                                               formatter.toString(),//date,
-                                               decode[0]["Quality"].toString(),//varible1,
-                                               "Quality",//varible1Name,
-                                               decode[0]["Length"].toString(),//varible2,
-                                               "Length",//varible2Name,
-                                               decode[0]["Width"].toString(),//varible3,
-                                               "Width",//varible3Name,
-                                               decode[0]["PVCpillow"].toString(),//varible4,
-                                               "PVCpillow",//varible4Name,
-                                               decode[0]["PillowCover"].toString(),//varible5,
-                                               "PillowCover",//varible5Name,
-                                               decode[0]["Weight"].toString(),//varible6,
-                                               "Weight",//varible6Name,
-                                               "",//varible7,
-                                               "",//varible7Name,
-                                               "",//varible8,
-                                               "",//varible8Name,
-                                               "",//varible9,
-                                               "",// varible9Name,
-                                               "",// varible10,
-                                               "",//varible10Name,
-                                               "",// varible11,
-                                               "",//varible11Name,
-                                               decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                               decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                               decode[0]["LineID"].toString(),//lineID,
-                                               decode[0]["Bundle"].toString(),//bundle
-                                               0,
-                                             ),
-                                           ),
+                                          secBundalScreen.add(
+                                            BundalScreen(
+                                              decode[0]["Header Item"].toString(),//productCode,
+                                              decode[0]["ItemCode"].toString(),//itemCode,
+                                              formatter.toString(),//date,
+                                              decode[0]["Quality"].toString(),//varible1,
+                                              "Quality",//varible1Name,
+                                              decode[0]["Length"].toString(),//varible2,
+                                              "Length",//varible2Name,
+                                              decode[0]["Width"].toString(),//varible3,
+                                              "Width",//varible3Name,
+                                              decode[0]["PVCpillow"].toString(),//varible4,
+                                              "PVCpillow",//varible4Name,
+                                              decode[0]["PillowCover"].toString(),//varible5,
+                                              "PillowCover",//varible5Name,
+                                              decode[0]["Weight"].toString(),//varible6,
+                                              "Weight",//varible6Name,
+                                              "",//varible7,
+                                              "",//varible7Name,
+                                              "",//varible8,
+                                              "",//varible8Name,
+                                              "",//varible9,
+                                              "",// varible9Name,
+                                              "",// varible10,
+                                              "",//varible10Name,
+                                              "",// varible11,
+                                              "",//varible11Name,
+                                              decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                              decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                              decode[0]["LineID"].toString(),//lineID,
+                                              decode[0]["Bundle"].toString(),//bundle
+                                              0,
+                                            ),
+                                          ),
 
-                                         }
-           else if(decode[0]["Header Item"].toString()=="000018"){}
-           else if(decode[0]["Header Item"].toString()=="000019"){}
-           else if(decode[0]["Header Item"].toString()=="000020"){}
-           else if(decode[0]["Header Item"].toString()=="000021"){
-                                                   secBundalScreen.add(
-                                                     BundalScreen(
-                                                       decode[0]["Header Item"].toString(),//productCode,
-                                                       decode[0]["ItemCode"].toString(),//itemCode,
-                                                       formatter.toString(),//date,
-                                                       decode[0]["Quality"].toString(),//varible1,
-                                                       "Quality",//varible1Name,
-                                                       decode[0]["Length"].toString(),//varible2,
-                                                       "Length",//varible2Name,
-                                                       decode[0]["Width"].toString(),//varible3,
-                                                       "Width",//varible3Name,
-                                                       decode[0]["Thickness"].toString(),//varible4,
-                                                       "Thickness",//varible4Name,
-                                                       decode[0]["MRP"].toString(),//varible5,
-                                                       "MRP",//varible5Name,
-                                                       decode[0]["Weight"].toString(),//varible6,
-                                                       "Weight",//varible6Name,
-                                                       "",//varible7,
-                                                       "",//varible7Name,
-                                                       "",//varible8,
-                                                       "",//varible8Name,
-                                                       "",//varible9,
-                                                       "",// varible9Name,
-                                                       "",// varible10,
-                                                       "",//varible10Name,
-                                                       "",// varible11,
-                                                       "",//varible11Name,
-                                                       decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                       decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                       decode[0]["LineID"].toString(),//lineID,
-                                                       decode[0]["Bundle"].toString(),//bundle
-                                                       0,
-                                                     ),
-                                                   ),
-                                                 }
-           else if(decode[0]["Header Item"].toString()=="000022"){
-                                                     secBundalScreen.add(
-                                                       BundalScreen(
-                                                         decode[0]["Header Item"].toString(),//productCode,
-                                                         decode[0]["ItemCode"].toString(),//itemCode,
-                                                         formatter.toString(),//date,
-                                                         decode[0]["Quality"].toString(),//varible1,
-                                                         "Quality",//varible1Name,
-                                                         decode[0]["Length"].toString(),//varible2,
-                                                         "Length",//varible2Name,
-                                                         decode[0]["Width"].toString(),//varible3,
-                                                         "Width",//varible3Name,
-                                                         decode[0]["Thickness"].toString(),//varible4,
-                                                         "Thickness",//varible4Name,
-                                                         decode[0]["MRP"].toString(),//varible5,
-                                                         "MRP",//varible5Name,
-                                                         decode[0]["Weight"].toString(),//varible6,
-                                                         "Weight",//varible6Name,
-                                                         "",//varible7,
-                                                         "",//varible7Name,
-                                                         "",//varible8,
-                                                         "",//varible8Name,
-                                                         "",//varible9,
-                                                         "",// varible9Name,
-                                                         "",// varible10,
-                                                         "",//varible10Name,
-                                                         "",// varible11,
-                                                         "",//varible11Name,
-                                                         decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                         decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                         decode[0]["LineID"].toString(),//lineID,
-                                                         decode[0]["Bundle"].toString(),//bundle
-                                                         0,
-                                                       ),
-                                                     ),
-                                                   }
-           else if(decode[0]["Header Item"].toString()=="000023"){
-                                                       secBundalScreen.add(
-                                                         BundalScreen(
-                                                           decode[0]["Header Item"].toString(),//productCode,
-                                                           decode[0]["ItemCode"].toString(),//itemCode,
-                                                           formatter.toString(),//date,
-                                                           decode[0]["Quality"].toString(),//varible1,
-                                                           "Quality",//varible1Name,
-                                                           decode[0]["Density"].toString(),//varible2,
-                                                           "Density",//varible2Name,
-                                                           decode[0]["Length"].toString(),//varible3,
-                                                           "Length",//varible3Name,
-                                                           decode[0]["Width"].toString(),//varible4,
-                                                           "Width",//varible4Name,
-                                                           decode[0]["Weight"].toString(),//varible5,
-                                                           "Weight",//varible5Name,
-                                                           "",//varible6,
-                                                           "",//varible6Name,
-                                                           "",//varible7,
-                                                           "",//varible7Name,
-                                                           "",//varible8,
-                                                           "",//varible8Name,
-                                                           "",//varible9,
-                                                           "",// varible9Name,
-                                                           "",// varible10,
-                                                           "",//varible10Name,
-                                                           "",// varible11,
-                                                           "",//varible11Name,
-                                                           decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                           decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                           decode[0]["LineID"].toString(),//lineID,
-                                                           decode[0]["Bundle"].toString(),//bundle
-                                                           0,
-                                                         ),
-                                                       ),
-                                                     }
-           else if(decode[0]["Header Item"].toString()=="000024"){
-                                                         secBundalScreen.add(
-                                                           BundalScreen(
-                                                             decode[0]["Header Item"].toString(),//productCode,
-                                                             decode[0]["ItemCode"].toString(),//itemCode,
-                                                             formatter.toString(),//date,
-                                                             decode[0]["Quality"].toString(),//varible1,
-                                                             "Quality",//varible1Name,
-                                                             decode[0]["Density"].toString(),//varible2,
-                                                             "Density",//varible2Name,
-                                                             decode[0]["Width"].toString(),//varible3,
-                                                             "Width",//varible3Name,
-                                                             decode[0]["Weight"].toString(),//varible4,
-                                                             "Weight",//varible4Name,
-                                                             "",//varible5,
-                                                             "",//varible5Name,
-                                                             "",//varible6,
-                                                             "",//varible6Name,
-                                                             "",//varible7,
-                                                             "",//varible7Name,
-                                                             "",//varible8,
-                                                             "",//varible8Name,
-                                                             "",//varible9,
-                                                             "",// varible9Name,
-                                                             "",// varible10,
-                                                             "",//varible10Name,
-                                                             "",// varible11,
-                                                             "",//varible11Name,
-                                                             decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                             decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                             decode[0]["LineID"].toString(),//lineID,
-                                                             decode[0]["Bundle"].toString(),//bundle
-                                                             0,
-                                                           ),
-                                                         ),
-                                                       }
-           else if(decode[0]["Header Item"].toString()=="000025"){}
-           else if(decode[0]["Header Item"].toString()=="000026"){}
-           else if(decode[0]["Header Item"].toString()=="000027"){
-                                                               secBundalScreen.add(
-                                                                 BundalScreen(
-                                                                   decode[0]["Header Item"].toString(),//productCode,
-                                                                   decode[0]["ItemCode"].toString(),//itemCode,
-                                                                   formatter.toString(),//date,
-                                                                   decode[0]["Thickness"].toString(),//varible1,
-                                                                   "Thickness",//varible1Name,
-                                                                   decode[0]["Height"].toString(),//varible2,
-                                                                   "Height",//varible2Name,
-                                                                   decode[0]["Turns"].toString(),//varible3,
-                                                                   "Turns",//varible3Name,
-                                                                   decode[0]["CoilStructure"].toString(),//varible4,
-                                                                   "CoilStructure",//varible4Name,
-                                                                   decode[0]["Length"].toString(),//varible5,
-                                                                   "Length",//varible5Name,
-                                                                   decode[0]["Width"].toString(),//varible6,
-                                                                   "Width",//varible6Name,
-                                                                   decode[0]["Weight"].toString(),//varible7,
-                                                                   "Weight",//varible7Name,
-                                                                   "",//varible8,
-                                                                   "",//varible8Name,
-                                                                   "",//varible9,
-                                                                   "",// varible9Name,
-                                                                   "",// varible10,
-                                                                   "",//varible10Name,
-                                                                   "",// varible11,
-                                                                   "",//varible11Name,
-                                                                   decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                                   decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                                   decode[0]["LineID"].toString(),//lineID,
-                                                                   decode[0]["Bundle"].toString(),//bundle
-                                                                   0,
-                                                                 ),
-                                                               ),
-                                                             }
-           else if(decode[0]["Header Item"].toString()=="000028"){
-                                                                 secBundalScreen.add(
-                                                                   BundalScreen(
-                                                                     decode[0]["Header Item"].toString(),//productCode,
-                                                                     decode[0]["ItemCode"].toString(),//itemCode,
-                                                                     formatter.toString(),//date,
-                                                                     decode[0]["Thickness"].toString(),//varible1,
-                                                                     "Thickness",//varible1Name,
-                                                                     decode[0]["Height"].toString(),//varible2,
-                                                                     "Height",//varible2Name,
-                                                                     decode[0]["Turns"].toString(),//varible3,
-                                                                     "Turns",//varible3Name,
-                                                                     decode[0]["CoilStructure"].toString(),//varible4,
-                                                                     "CoilStructure",//varible4Name,
-                                                                     decode[0]["Length"].toString(),//varible5,
-                                                                     "Length",//varible5Name,
-                                                                     decode[0]["Width"].toString(),//varible6,
-                                                                     "Width",//varible6Name,
-                                                                     decode[0]["Weight"].toString(),//varible7,
-                                                                     "Weight",//varible7Name,
-                                                                     "",//varible8,
-                                                                     "",//varible8Name,
-                                                                     "",//varible9,
-                                                                     "",// varible9Name,
-                                                                     "",// varible10,
-                                                                     "",//varible10Name,
-                                                                     "",// varible11,
-                                                                     "",//varible11Name,
-                                                                     decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                                     decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                                     decode[0]["LineID"].toString(),//lineID,
-                                                                     decode[0]["Bundle"].toString(),//bundle
-                                                                     0,
-                                                                   ),
-                                                                 ),
-                                                               }
-           else if(decode[0]["Header Item"].toString()=="000029"){
-                                                                   secBundalScreen.add(
-                                                                     BundalScreen(
-                                                                       decode[0]["Header Item"].toString(),//productCode,
-                                                                       decode[0]["ItemCode"].toString(),//itemCode,
-                                                                       formatter.toString(),//date,
-                                                                       decode[0]["Thickness"].toString(),//varible1,
-                                                                       "Thickness",//varible1Name,
-                                                                       decode[0]["Height"].toString(),//varible2,
-                                                                       "Height",//varible2Name,
-                                                                       decode[0]["Turns"].toString(),//varible3,
-                                                                       "Turns",//varible3Name,
-                                                                       decode[0]["CoilStructure"].toString(),//varible4,
-                                                                       "CoilStructure",//varible4Name,
-                                                                       decode[0]["Length"].toString(),//varible5,
-                                                                       "Length",//varible5Name,
-                                                                       decode[0]["Width"].toString(),//varible6,
-                                                                       "Width",//varible6Name,
-                                                                       decode[0]["Weight"].toString(),//varible7,
-                                                                       "Weight",//varible7Name,
-                                                                       "",//varible8,
-                                                                       "",//varible8Name,
-                                                                       "",//varible9,
-                                                                       "",// varible9Name,
-                                                                       "",// varible10,
-                                                                       "",//varible10Name,
-                                                                       "",// varible11,
-                                                                       "",//varible11Name,
-                                                                       decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                                       decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                                       decode[0]["LineID"].toString(),//lineID,
-                                                                       decode[0]["Bundle"].toString(),//bundle
-                                                                       0,
-                                                                     ),
-                                                                   ),
-                                                                 }
-           else if(decode[0]["Header Item"].toString()=="000030"){
-                                                                     secBundalScreen.add(
-                                                                       BundalScreen(
-                                                                         decode[0]["Header Item"].toString(),//productCode,
-                                                                         decode[0]["ItemCode"].toString(),//itemCode,
-                                                                         formatter.toString(),//date,
-                                                                         decode[0]["Thickness"].toString(),//varible1,
-                                                                         "Thickness",//varible1Name,
-                                                                         decode[0]["Height"].toString(),//varible2,
-                                                                         "Height",//varible2Name,
-                                                                         decode[0]["Turns"].toString(),//varible3,
-                                                                         "Turns",//varible3Name,
-                                                                         decode[0]["CoilStructure"].toString(),//varible4,
-                                                                         "CoilStructure",//varible4Name,
-                                                                         decode[0]["Length"].toString(),//varible5,
-                                                                         "Length",//varible5Name,
-                                                                         decode[0]["Width"].toString(),//varible6,
-                                                                         "Width",//varible6Name,
-                                                                         decode[0]["Weight"].toString(),//varible7,
-                                                                         "Weight",//varible7Name,
-                                                                         "",//varible8,
-                                                                         "",//varible8Name,
-                                                                         "",//varible9,
-                                                                         "",// varible9Name,
-                                                                         "",// varible10,
-                                                                         "",//varible10Name,
-                                                                         "",// varible11,
-                                                                         "",//varible11Name,
-                                                                         decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                                         decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                                         decode[0]["LineID"].toString(),//lineID,
-                                                                         decode[0]["Bundle"].toString(),//bundle
-                                                                         0,
-                                                                       ),
-                                                                     ),
-                                                                   }
-           else if(decode[0]["Header Item"].toString()=="000031"){
-                                                                       secBundalScreen.add(
-                                                                         BundalScreen(
-                                                                           decode[0]["Header Item"].toString(),//productCode,
-                                                                           decode[0]["ItemCode"].toString(),//itemCode,
-                                                                           formatter.toString(),//date,
-                                                                           decode[0]["Thickness"].toString(),//varible1,
-                                                                           "Thickness",//varible1Name,
-                                                                           decode[0]["Height"].toString(),//varible2,
-                                                                           "Height",//varible2Name,
-                                                                           decode[0]["Turns"].toString(),//varible3,
-                                                                           "Turns",//varible3Name,
-                                                                           decode[0]["CoilStructure"].toString(),//varible4,
-                                                                           "CoilStructure",//varible4Name,
-                                                                           decode[0]["Length"].toString(),//varible5,
-                                                                           "Length",//varible5Name,
-                                                                           decode[0]["Width"].toString(),//varible6,
-                                                                           "Width",//varible6Name,
-                                                                           decode[0]["Weight"].toString(),//varible7,
-                                                                           "Weight",//varible7Name,
-                                                                           "",//varible8,
-                                                                           "",//varible8Name,
-                                                                           "",//varible9,
-                                                                           "",// varible9Name,
-                                                                           "",// varible10,
-                                                                           "",//varible10Name,
-                                                                           "",// varible11,
-                                                                           "",//varible11Name,
-                                                                           decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                                           decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                                           decode[0]["LineID"].toString(),//lineID,
-                                                                           decode[0]["Bundle"].toString(),//bundle
-                                                                           0,
-                                                                         ),
-                                                                       ),
-                                                                     }
-           else if(decode[0]["Header Item"].toString()=="000042"){
-                                                                         secBundalScreen.add(
-                                                                           BundalScreen(
-                                                                             decode[0]["Header Item"].toString(),//productCode,
-                                                                             decode[0]["ItemCode"].toString(),//itemCode,
-                                                                             formatter.toString(),//date,
-                                                                             decode[0]["Quality"].toString(),//varible1,
-                                                                             "Quality",//varible1Name,
-                                                                             decode[0]["Emboss"].toString(),//varible2,
-                                                                             "Emboss",//varible2Name,
-                                                                             decode[0]["Cloth"].toString(),//varible3,
-                                                                             "Cloth",//varible3Name,
-                                                                             decode[0]["Finish"].toString(),//varible4,
-                                                                             "Finish",//varible4Name,
-                                                                             decode[0]["Color"].toString(),//varible5,
-                                                                             "Color",//varible5Name,
-                                                                             decode[0]["Thickness"].toString(),//varible6,
-                                                                             "Thickness",//varible6Name,
-                                                                             decode[0]["Tone"].toString(),//varible7,
-                                                                             "Tone",//varible7Name,
-                                                                             decode[0]["Width"].toString(),//varible8,
-                                                                             "Width",//varible8Name,
-                                                                             decode[0]["Quantity"].toString(),//varible9,
-                                                                             "Quantity",// varible9Name,
-                                                                             decode[0]["Grade"].toString(),// varible10,
-                                                                             "Grade",//varible10Name,
-                                                                             decode[0]["Weight"].toString(),// varible11,
-                                                                             "Weight",//varible11Name,
-                                                                             decode[0]["StorageBayNo"].toString(),//storagePayNo,
-                                                                             decode[0]["QRDocEntry"].toString(),//qrdocEntry,
-                                                                             decode[0]["LineID"].toString(),//lineID,
-                                                                             decode[0]["Bundle"].toString(),//bundle
-                                                                             0,
-                                                                           ),
-                                                                         ),
-                                                                       },
-           Utility.closeLoader(),
-           update(),
-         }else{
-           Utility.closeLoader(),
-           update(),
-           Utility.showDialaogboxWarning(Get.context, "This ItemCode Already Added..", "Warning")
+                                        }
+                                        else if(decode[0]["Header Item"].toString()=="000018"){}
+                                          else if(decode[0]["Header Item"].toString()=="000019"){}
+                                            else if(decode[0]["Header Item"].toString()=="000020"){}
+                                              else if(decode[0]["Header Item"].toString()=="000021"){
+                                                  secBundalScreen.add(
+                                                    BundalScreen(
+                                                      decode[0]["Header Item"].toString(),//productCode,
+                                                      decode[0]["ItemCode"].toString(),//itemCode,
+                                                      formatter.toString(),//date,
+                                                      decode[0]["Quality"].toString(),//varible1,
+                                                      "Quality",//varible1Name,
+                                                      decode[0]["Length"].toString(),//varible2,
+                                                      "Length",//varible2Name,
+                                                      decode[0]["Width"].toString(),//varible3,
+                                                      "Width",//varible3Name,
+                                                      decode[0]["Thickness"].toString(),//varible4,
+                                                      "Thickness",//varible4Name,
+                                                      decode[0]["MRP"].toString(),//varible5,
+                                                      "MRP",//varible5Name,
+                                                      decode[0]["Weight"].toString(),//varible6,
+                                                      "Weight",//varible6Name,
+                                                      "",//varible7,
+                                                      "",//varible7Name,
+                                                      "",//varible8,
+                                                      "",//varible8Name,
+                                                      "",//varible9,
+                                                      "",// varible9Name,
+                                                      "",// varible10,
+                                                      "",//varible10Name,
+                                                      "",// varible11,
+                                                      "",//varible11Name,
+                                                      decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                      decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                      decode[0]["LineID"].toString(),//lineID,
+                                                      decode[0]["Bundle"].toString(),//bundle
+                                                      0,
+                                                    ),
+                                                  ),
+                                                }
+                                                else if(decode[0]["Header Item"].toString()=="000022"){
+                                                    secBundalScreen.add(
+                                                      BundalScreen(
+                                                        decode[0]["Header Item"].toString(),//productCode,
+                                                        decode[0]["ItemCode"].toString(),//itemCode,
+                                                        formatter.toString(),//date,
+                                                        decode[0]["Quality"].toString(),//varible1,
+                                                        "Quality",//varible1Name,
+                                                        decode[0]["Length"].toString(),//varible2,
+                                                        "Length",//varible2Name,
+                                                        decode[0]["Width"].toString(),//varible3,
+                                                        "Width",//varible3Name,
+                                                        decode[0]["Thickness"].toString(),//varible4,
+                                                        "Thickness",//varible4Name,
+                                                        decode[0]["MRP"].toString(),//varible5,
+                                                        "MRP",//varible5Name,
+                                                        decode[0]["Weight"].toString(),//varible6,
+                                                        "Weight",//varible6Name,
+                                                        "",//varible7,
+                                                        "",//varible7Name,
+                                                        "",//varible8,
+                                                        "",//varible8Name,
+                                                        "",//varible9,
+                                                        "",// varible9Name,
+                                                        "",// varible10,
+                                                        "",//varible10Name,
+                                                        "",// varible11,
+                                                        "",//varible11Name,
+                                                        decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                        decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                        decode[0]["LineID"].toString(),//lineID,
+                                                        decode[0]["Bundle"].toString(),//bundle
+                                                        0,
+                                                      ),
+                                                    ),
+                                                  }
+                                                  else if(decode[0]["Header Item"].toString()=="000023"){
+                                                      secBundalScreen.add(
+                                                        BundalScreen(
+                                                          decode[0]["Header Item"].toString(),//productCode,
+                                                          decode[0]["ItemCode"].toString(),//itemCode,
+                                                          formatter.toString(),//date,
+                                                          decode[0]["Quality"].toString(),//varible1,
+                                                          "Quality",//varible1Name,
+                                                          decode[0]["Density"].toString(),//varible2,
+                                                          "Density",//varible2Name,
+                                                          decode[0]["Length"].toString(),//varible3,
+                                                          "Length",//varible3Name,
+                                                          decode[0]["Width"].toString(),//varible4,
+                                                          "Width",//varible4Name,
+                                                          decode[0]["Weight"].toString(),//varible5,
+                                                          "Weight",//varible5Name,
+                                                          "",//varible6,
+                                                          "",//varible6Name,
+                                                          "",//varible7,
+                                                          "",//varible7Name,
+                                                          "",//varible8,
+                                                          "",//varible8Name,
+                                                          "",//varible9,
+                                                          "",// varible9Name,
+                                                          "",// varible10,
+                                                          "",//varible10Name,
+                                                          "",// varible11,
+                                                          "",//varible11Name,
+                                                          decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                          decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                          decode[0]["LineID"].toString(),//lineID,
+                                                          decode[0]["Bundle"].toString(),//bundle
+                                                          0,
+                                                        ),
+                                                      ),
+                                                    }
+                                                    else if(decode[0]["Header Item"].toString()=="000024"){
+                                                        secBundalScreen.add(
+                                                          BundalScreen(
+                                                            decode[0]["Header Item"].toString(),//productCode,
+                                                            decode[0]["ItemCode"].toString(),//itemCode,
+                                                            formatter.toString(),//date,
+                                                            decode[0]["Quality"].toString(),//varible1,
+                                                            "Quality",//varible1Name,
+                                                            decode[0]["Density"].toString(),//varible2,
+                                                            "Density",//varible2Name,
+                                                            decode[0]["Width"].toString(),//varible3,
+                                                            "Width",//varible3Name,
+                                                            decode[0]["Weight"].toString(),//varible4,
+                                                            "Weight",//varible4Name,
+                                                            "",//varible5,
+                                                            "",//varible5Name,
+                                                            "",//varible6,
+                                                            "",//varible6Name,
+                                                            "",//varible7,
+                                                            "",//varible7Name,
+                                                            "",//varible8,
+                                                            "",//varible8Name,
+                                                            "",//varible9,
+                                                            "",// varible9Name,
+                                                            "",// varible10,
+                                                            "",//varible10Name,
+                                                            "",// varible11,
+                                                            "",//varible11Name,
+                                                            decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                            decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                            decode[0]["LineID"].toString(),//lineID,
+                                                            decode[0]["Bundle"].toString(),//bundle
+                                                            0,
+                                                          ),
+                                                        ),
+                                                      }
+                                                      else if(decode[0]["Header Item"].toString()=="000025"){}
+                                                        else if(decode[0]["Header Item"].toString()=="000026"){}
+                                                          else if(decode[0]["Header Item"].toString()=="000027"){
+                                                              secBundalScreen.add(
+                                                                BundalScreen(
+                                                                  decode[0]["Header Item"].toString(),//productCode,
+                                                                  decode[0]["ItemCode"].toString(),//itemCode,
+                                                                  formatter.toString(),//date,
+                                                                  decode[0]["Thickness"].toString(),//varible1,
+                                                                  "Thickness",//varible1Name,
+                                                                  decode[0]["Height"].toString(),//varible2,
+                                                                  "Height",//varible2Name,
+                                                                  decode[0]["Turns"].toString(),//varible3,
+                                                                  "Turns",//varible3Name,
+                                                                  decode[0]["CoilStructure"].toString(),//varible4,
+                                                                  "CoilStructure",//varible4Name,
+                                                                  decode[0]["Length"].toString(),//varible5,
+                                                                  "Length",//varible5Name,
+                                                                  decode[0]["Width"].toString(),//varible6,
+                                                                  "Width",//varible6Name,
+                                                                  decode[0]["Weight"].toString(),//varible7,
+                                                                  "Weight",//varible7Name,
+                                                                  "",//varible8,
+                                                                  "",//varible8Name,
+                                                                  "",//varible9,
+                                                                  "",// varible9Name,
+                                                                  "",// varible10,
+                                                                  "",//varible10Name,
+                                                                  "",// varible11,
+                                                                  "",//varible11Name,
+                                                                  decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                                  decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                                  decode[0]["LineID"].toString(),//lineID,
+                                                                  decode[0]["Bundle"].toString(),//bundle
+                                                                  0,
+                                                                ),
+                                                              ),
+                                                            }
+                                                            else if(decode[0]["Header Item"].toString()=="000028"){
+                                                                secBundalScreen.add(
+                                                                  BundalScreen(
+                                                                    decode[0]["Header Item"].toString(),//productCode,
+                                                                    decode[0]["ItemCode"].toString(),//itemCode,
+                                                                    formatter.toString(),//date,
+                                                                    decode[0]["Thickness"].toString(),//varible1,
+                                                                    "Thickness",//varible1Name,
+                                                                    decode[0]["Height"].toString(),//varible2,
+                                                                    "Height",//varible2Name,
+                                                                    decode[0]["Turns"].toString(),//varible3,
+                                                                    "Turns",//varible3Name,
+                                                                    decode[0]["CoilStructure"].toString(),//varible4,
+                                                                    "CoilStructure",//varible4Name,
+                                                                    decode[0]["Length"].toString(),//varible5,
+                                                                    "Length",//varible5Name,
+                                                                    decode[0]["Width"].toString(),//varible6,
+                                                                    "Width",//varible6Name,
+                                                                    decode[0]["Weight"].toString(),//varible7,
+                                                                    "Weight",//varible7Name,
+                                                                    "",//varible8,
+                                                                    "",//varible8Name,
+                                                                    "",//varible9,
+                                                                    "",// varible9Name,
+                                                                    "",// varible10,
+                                                                    "",//varible10Name,
+                                                                    "",// varible11,
+                                                                    "",//varible11Name,
+                                                                    decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                                    decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                                    decode[0]["LineID"].toString(),//lineID,
+                                                                    decode[0]["Bundle"].toString(),//bundle
+                                                                    0,
+                                                                  ),
+                                                                ),
+                                                              }
+                                                              else if(decode[0]["Header Item"].toString()=="000029"){
+                                                                  secBundalScreen.add(
+                                                                    BundalScreen(
+                                                                      decode[0]["Header Item"].toString(),//productCode,
+                                                                      decode[0]["ItemCode"].toString(),//itemCode,
+                                                                      formatter.toString(),//date,
+                                                                      decode[0]["Thickness"].toString(),//varible1,
+                                                                      "Thickness",//varible1Name,
+                                                                      decode[0]["Height"].toString(),//varible2,
+                                                                      "Height",//varible2Name,
+                                                                      decode[0]["Turns"].toString(),//varible3,
+                                                                      "Turns",//varible3Name,
+                                                                      decode[0]["CoilStructure"].toString(),//varible4,
+                                                                      "CoilStructure",//varible4Name,
+                                                                      decode[0]["Length"].toString(),//varible5,
+                                                                      "Length",//varible5Name,
+                                                                      decode[0]["Width"].toString(),//varible6,
+                                                                      "Width",//varible6Name,
+                                                                      decode[0]["Weight"].toString(),//varible7,
+                                                                      "Weight",//varible7Name,
+                                                                      "",//varible8,
+                                                                      "",//varible8Name,
+                                                                      "",//varible9,
+                                                                      "",// varible9Name,
+                                                                      "",// varible10,
+                                                                      "",//varible10Name,
+                                                                      "",// varible11,
+                                                                      "",//varible11Name,
+                                                                      decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                                      decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                                      decode[0]["LineID"].toString(),//lineID,
+                                                                      decode[0]["Bundle"].toString(),//bundle
+                                                                      0,
+                                                                    ),
+                                                                  ),
+                                                                }
+                                                                else if(decode[0]["Header Item"].toString()=="000030"){
+                                                                    secBundalScreen.add(
+                                                                      BundalScreen(
+                                                                        decode[0]["Header Item"].toString(),//productCode,
+                                                                        decode[0]["ItemCode"].toString(),//itemCode,
+                                                                        formatter.toString(),//date,
+                                                                        decode[0]["Thickness"].toString(),//varible1,
+                                                                        "Thickness",//varible1Name,
+                                                                        decode[0]["Height"].toString(),//varible2,
+                                                                        "Height",//varible2Name,
+                                                                        decode[0]["Turns"].toString(),//varible3,
+                                                                        "Turns",//varible3Name,
+                                                                        decode[0]["CoilStructure"].toString(),//varible4,
+                                                                        "CoilStructure",//varible4Name,
+                                                                        decode[0]["Length"].toString(),//varible5,
+                                                                        "Length",//varible5Name,
+                                                                        decode[0]["Width"].toString(),//varible6,
+                                                                        "Width",//varible6Name,
+                                                                        decode[0]["Weight"].toString(),//varible7,
+                                                                        "Weight",//varible7Name,
+                                                                        "",//varible8,
+                                                                        "",//varible8Name,
+                                                                        "",//varible9,
+                                                                        "",// varible9Name,
+                                                                        "",// varible10,
+                                                                        "",//varible10Name,
+                                                                        "",// varible11,
+                                                                        "",//varible11Name,
+                                                                        decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                                        decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                                        decode[0]["LineID"].toString(),//lineID,
+                                                                        decode[0]["Bundle"].toString(),//bundle
+                                                                        0,
+                                                                      ),
+                                                                    ),
+                                                                  }
+                                                                  else if(decode[0]["Header Item"].toString()=="000031"){
+                                                                      secBundalScreen.add(
+                                                                        BundalScreen(
+                                                                          decode[0]["Header Item"].toString(),//productCode,
+                                                                          decode[0]["ItemCode"].toString(),//itemCode,
+                                                                          formatter.toString(),//date,
+                                                                          decode[0]["Thickness"].toString(),//varible1,
+                                                                          "Thickness",//varible1Name,
+                                                                          decode[0]["Height"].toString(),//varible2,
+                                                                          "Height",//varible2Name,
+                                                                          decode[0]["Turns"].toString(),//varible3,
+                                                                          "Turns",//varible3Name,
+                                                                          decode[0]["CoilStructure"].toString(),//varible4,
+                                                                          "CoilStructure",//varible4Name,
+                                                                          decode[0]["Length"].toString(),//varible5,
+                                                                          "Length",//varible5Name,
+                                                                          decode[0]["Width"].toString(),//varible6,
+                                                                          "Width",//varible6Name,
+                                                                          decode[0]["Weight"].toString(),//varible7,
+                                                                          "Weight",//varible7Name,
+                                                                          "",//varible8,
+                                                                          "",//varible8Name,
+                                                                          "",//varible9,
+                                                                          "",// varible9Name,
+                                                                          "",// varible10,
+                                                                          "",//varible10Name,
+                                                                          "",// varible11,
+                                                                          "",//varible11Name,
+                                                                          decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                                          decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                                          decode[0]["LineID"].toString(),//lineID,
+                                                                          decode[0]["Bundle"].toString(),//bundle
+                                                                          0,
+                                                                        ),
+                                                                      ),
+                                                                    }
+                                                                    else if(decode[0]["Header Item"].toString()=="000042"){
+                                                                        secBundalScreen.add(
+                                                                          BundalScreen(
+                                                                            decode[0]["Header Item"].toString(),//productCode,
+                                                                            decode[0]["ItemCode"].toString(),//itemCode,
+                                                                            formatter.toString(),//date,
+                                                                            decode[0]["Quality"].toString(),//varible1,
+                                                                            "Quality",//varible1Name,
+                                                                            decode[0]["Emboss"].toString(),//varible2,
+                                                                            "Emboss",//varible2Name,
+                                                                            decode[0]["Cloth"].toString(),//varible3,
+                                                                            "Cloth",//varible3Name,
+                                                                            decode[0]["Finish"].toString(),//varible4,
+                                                                            "Finish",//varible4Name,
+                                                                            decode[0]["Color"].toString(),//varible5,
+                                                                            "Color",//varible5Name,
+                                                                            decode[0]["Thickness"].toString(),//varible6,
+                                                                            "Thickness",//varible6Name,
+                                                                            decode[0]["Tone"].toString(),//varible7,
+                                                                            "Tone",//varible7Name,
+                                                                            decode[0]["Width"].toString(),//varible8,
+                                                                            "Width",//varible8Name,
+                                                                            decode[0]["Quantity"].toString(),//varible9,
+                                                                            "Quantity",// varible9Name,
+                                                                            decode[0]["Grade"].toString(),// varible10,
+                                                                            "Grade",//varible10Name,
+                                                                            decode[0]["Weight"].toString(),// varible11,
+                                                                            "Weight",//varible11Name,
+                                                                            decode[0]["StorageBayNo"].toString(),//storagePayNo,
+                                                                            decode[0]["QRDocEntry"].toString(),//qrdocEntry,
+                                                                            decode[0]["LineID"].toString(),//lineID,
+                                                                            decode[0]["Bundle"].toString(),//bundle
+                                                                            0,
+                                                                          ),
+                                                                        ),
+                                                                      },
+          Utility.closeLoader(),
+          update(),
+        }else{
+          Utility.closeLoader(),
+          update(),
+          Utility.showDialaogboxWarning(Get.context, "This ItemCode Already Added..", "Warning")
 
-         },
+        },
 
 
 
-       }else{
-         Utility.closeLoader(),
-         update(),
-       }
-     });
+      }else{
+        Utility.closeLoader(),
+        update(),
+      }
+    });
 
 
 
@@ -1086,7 +1075,7 @@ class packingScreenController extends GetxController {
 
   getItemCode(soNo, docEntry, userId, cardCode, status,index){
     secBundalScreen[index].itemCode="";
-        api_call.getAllMaster(4, soNo, docEntry, userId, cardCode, status, true).then((value) => {
+    api_call.getAllMaster(4, soNo, docEntry, userId, cardCode, status, true).then((value) => {
       if(value.statusCode==200){
         Utility.closeLoader(),
         update(),
@@ -1170,79 +1159,29 @@ class packingScreenController extends GetxController {
     );
   }
 
-  screenListRemove(int index) {
-    secBundalScreen.removeAt(index);
-    update();
-  }
-
-  postSave() {
-    Utility.showLoader();
-    update();
-
-    for(int k=0;k<secBundalScreen.length;k++){
-      api_call.insertPicking(
-          1,
-          0,
-          secBundalScreen[k].productCode,// productCode,
-          secBundalScreen[k].itemCode,//itemCode,
-          secBundalScreen[k].varible1,//varible1,
-          secBundalScreen[k].varible2,//varible2,
-          secBundalScreen[k].varible3,//varible3,
-          secBundalScreen[k].varible4,//varible4,
-          secBundalScreen[k].varible5,//varible5,
-          secBundalScreen[k].varible6,//varible6,
-          secBundalScreen[k].varible7,//varible7,
-          secBundalScreen[k].varible8,//varible8,
-          secBundalScreen[k].varible9,//varible9,
-          secBundalScreen[k].varible10,//varible10,
-          secBundalScreen[k].varible11,//varible11,
-          secBundalScreen[k].storagePayNo,//storagePayNo,
-          secBundalScreen[k].qrdocEntry,//qrdocEntry,
-          secBundalScreen[k].lineID,//lineID,
-          secBundalScreen[k].bundle,//bundle,
-          false).then((value) => {
-
-      });
-    }
-    Utility.closeLoader();
-    update();
-    Utility.showDialaogboxSaved(Get.context, "Saved Successfully..", "Saved");
-
-
-  }
-
-  void pageRefresh(){
-
-    Get.delete<packingScreenController>();
-    Get.put(packingScreenController());
-    Get.back();
-    Get.to(()=>const packingScreenPage(),arguments: <String,dynamic>{});
-    Get.back();
-    update();
-  }
 
   myListselect(int index) {
     secBundalScreen[index].selected=1;
     update();
-   }
+  }
 
   selectDelete() {
     for(int i=0;i<secBundalScreen.length;i++){
-    if(secBundalScreen[i].selected==1){
-      secBundalScreen.removeAt(i);
-    }}
+      if(secBundalScreen[i].selected==1){
+        secBundalScreen.removeAt(i);
+      }}
     update();
-   }
+  }
 
   getData(index) {
     //print(secBundalScreen[index].productCode);
     if(secBundalScreen[index].productCode=="000001") {
       getItemCode(
-         "000001",
-         "docEntry",
-         secBundalScreen[index].varible2,//userId, Quality
-         secBundalScreen[index].varible3, // CradCode, Density
-         "",index);
+          "000001",
+          "docEntry",
+          secBundalScreen[index].varible2,//userId, Quality
+          secBundalScreen[index].varible3, // CradCode, Density
+          "",index);
     }
     else if(secBundalScreen[index].productCode=="000004") {
       getItemCode(
@@ -1437,7 +1376,7 @@ class packingScreenController extends GetxController {
           index);
     }
 
-   }
+  }
 
   showenterinput(productCode,varibleName,int index,setvaribleName) {
     //log("varibleName"+varibleName);
@@ -1513,7 +1452,7 @@ class packingScreenController extends GetxController {
           rawQualityModel = QualityModel.fromJson(jsonDecode(value.body)),
           for(int j=0;j<rawQualityModel.result!.length;j++){
             secQualityModelList.add(
-                QualityModelList(rawQualityModel.result![j].uSpcation.toString()),
+              QualityModelList(rawQualityModel.result![j].uSpcation.toString()),
             )
           },
           Utility.closeLoader(),
@@ -1709,7 +1648,7 @@ class packingScreenController extends GetxController {
           update(),
         }
       });
-     }
+    }
     else if(varibleName=="Width"){
       secQualityModelList.clear();
       api_call.getgetAllList(4, productCode, "type", true).then((value) => {
@@ -1866,7 +1805,7 @@ class packingScreenController extends GetxController {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(onPressed: (){
-                       // secBundalScreen[index].varible7 = typeController.text;
+                        // secBundalScreen[index].varible7 = typeController.text;
                         if(setvaribleName=="varible1Name"){
                           secBundalScreen[index].varible1 = typeController.text;
                         }else if(setvaribleName=="varible2Name"){
@@ -3082,8 +3021,9 @@ class packingScreenController extends GetxController {
       });
     }
 
-   }
+  }
 }
+
 
 class BundalScreen{
   var productCode;
@@ -3161,14 +3101,14 @@ class ScenList {
 
   ScenList(
       this.saleOrderNo,
-        this.date,
-        this.quality,
-        this.length,
-        this.width,
-        this.thickness,
-        this.noOfSheets,
-        this.weight,
-        this.bundles);
+      this.date,
+      this.quality,
+      this.length,
+      this.width,
+      this.thickness,
+      this.noOfSheets,
+      this.weight,
+      this.bundles);
 
   ScenList.fromJson(Map<String, dynamic> json) {
     saleOrderNo = json['Sale Order No'];
@@ -3238,7 +3178,3 @@ class QrScan {
     return data;
   }
 }
-
-
-
-

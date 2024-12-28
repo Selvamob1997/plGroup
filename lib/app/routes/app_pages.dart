@@ -1,3 +1,5 @@
+import '../../app/modules/scaning_qrcode_module/scaning_qrcode_page.dart';
+import '../../app/modules/scaning_qrcode_module/scaning_qrcode_bindings.dart';
 import '../../app/modules/dispatched_module/dispatched_page.dart';
 import '../../app/modules/dispatched_module/dispatched_bindings.dart';
 import '../../app/modules/dash_board_module/dash_board_page.dart';
@@ -43,6 +45,11 @@ abstract class AppPages {
       name: Routes.DISPATCHED,
       page: () => DispatchedPage(),
       binding: DispatchedBinding(),
+    ),
+    GetPage(
+      name: Routes.SCANING_QRCODE,
+      page: () => ScaningQrcodePage(),
+      binding: ScaningQrcodeBinding(),
     ),
   ];
 }
