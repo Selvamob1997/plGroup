@@ -1,10 +1,10 @@
-class BranchModel {
+class ProductCodeModel {
   int? status;
   List<Result>? result;
 
-  BranchModel({this.status, this.result});
+  ProductCodeModel({this.status, this.result});
 
-  BranchModel.fromJson(Map<String, dynamic> json) {
+  ProductCodeModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     if (json['result'] != null) {
       result = <Result>[];
@@ -25,23 +25,20 @@ class BranchModel {
 }
 
 class Result {
-  var bPLId;
-  String? bPLName;
-  String? code;
+  String? prodCode;
+  String? kEYCode;
 
-  Result({this.bPLId, this.bPLName,this.code});
+  Result({this.prodCode, this.kEYCode});
 
   Result.fromJson(Map<String, dynamic> json) {
-    bPLId = json['BPLId'];
-    bPLName = json['BPLName'];
-    code = json['Code'];
+    prodCode = json['ProdCode'];
+    kEYCode = json['kEY_Code'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['BPLId'] = this.bPLId;
-    data['BPLName'] = this.bPLName;
-    data['Code'] = this.code;
+    data['ProdCode'] = this.prodCode;
+    data['kEY_Code'] = this.kEYCode;
     return data;
   }
 }

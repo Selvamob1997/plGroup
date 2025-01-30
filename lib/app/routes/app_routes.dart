@@ -11,4 +11,5 @@ abstract class Routes {
   static const DISPATCHED = '/dispatched'; // Dispatched page
   static const SACANING_QRCODE = '/sacaning_qrcode'; // SacaningQrcode page
   static const SCANING_QRCODE = '/scaning_qrcode'; // ScaningQrcode page
+  static const QR_CODE_GENERATOR = '/qr_code_generator'; // QrCodeGenerator page
 }

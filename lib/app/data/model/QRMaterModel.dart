@@ -1,10 +1,10 @@
-class BranchModel {
+class QRMaterModel {
   int? status;
   List<Result>? result;
 
-  BranchModel({this.status, this.result});
+  QRMaterModel({this.status, this.result});
 
-  BranchModel.fromJson(Map<String, dynamic> json) {
+  QRMaterModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     if (json['result'] != null) {
       result = <Result>[];
@@ -25,23 +25,26 @@ class BranchModel {
 }
 
 class Result {
-  var bPLId;
-  String? bPLName;
-  String? code;
+  String? uParCode;
+  String? uPaCode;
+  String? uSpcation;
+  String? uParName;
 
-  Result({this.bPLId, this.bPLName,this.code});
+  Result({this.uParCode, this.uPaCode, this.uSpcation, this.uParName});
 
   Result.fromJson(Map<String, dynamic> json) {
-    bPLId = json['BPLId'];
-    bPLName = json['BPLName'];
-    code = json['Code'];
+    uParCode = json['U_ParCode'];
+    uPaCode = json['U_PaCode'];
+    uSpcation = json['U_Spcation'];
+    uParName = json['U_ParName'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['BPLId'] = this.bPLId;
-    data['BPLName'] = this.bPLName;
-    data['Code'] = this.code;
+    data['U_ParCode'] = this.uParCode;
+    data['U_PaCode'] = this.uPaCode;
+    data['U_Spcation'] = this.uSpcation;
+    data['U_ParName'] = this.uParName;
     return data;
   }
 }

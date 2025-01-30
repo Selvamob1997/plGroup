@@ -43,6 +43,8 @@ class DashBoardController extends GetxController{
       routemanagement.gotoDispatched();
     }else if(i==3){
       routemanagement.gotoScaning();
+    }else if(i==4){
+      routemanagement.gotoQRScaning();
     }
     update();
   }

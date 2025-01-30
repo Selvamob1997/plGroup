@@ -1,10 +1,10 @@
-class BranchModel {
+class CustomerTypeModel {
   int? status;
   List<Result>? result;
 
-  BranchModel({this.status, this.result});
+  CustomerTypeModel({this.status, this.result});
 
-  BranchModel.fromJson(Map<String, dynamic> json) {
+  CustomerTypeModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     if (json['result'] != null) {
       result = <Result>[];
@@ -25,23 +25,20 @@ class BranchModel {
 }
 
 class Result {
-  var bPLId;
-  String? bPLName;
-  String? code;
+  String? cardCode;
+  String? cardName;
 
-  Result({this.bPLId, this.bPLName,this.code});
+  Result({this.cardCode, this.cardName});
 
   Result.fromJson(Map<String, dynamic> json) {
-    bPLId = json['BPLId'];
-    bPLName = json['BPLName'];
-    code = json['Code'];
+    cardCode = json['CardCode'];
+    cardName = json['CardName'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['BPLId'] = this.bPLId;
-    data['BPLName'] = this.bPLName;
-    data['Code'] = this.code;
+    data['CardCode'] = this.cardCode;
+    data['CardName'] = this.cardName;
     return data;
   }
 }

@@ -29,5 +29,8 @@ abstract class routemanagement {
   static void gotoScaning() {
     Get.toNamed(Routes.SCANING_QRCODE);
   }
+  static void gotoQRScaning() {
+    Get.toNamed(Routes.QR_CODE_GENERATOR);
+  }
 
 }

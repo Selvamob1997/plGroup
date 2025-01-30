@@ -195,16 +195,29 @@ class DashBoardPage extends GetView<DashBoardController> {
                   children: [
                     GestureDetector(
                       onTap: () {
+                        // Navigator.push(context, MaterialPageRoute(builder: (builder) => Report_screen()));
+                        // ScanQR(0);
                         myController.navigationCtr(4);
                       },
                       child: Container(
                         height: height/8,
-                        width: width/2.5,),
+                        width: width/2.5,
+                        decoration: const BoxDecoration(
+                            color: ColorsValue.primaryColor,
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(25),
+                                topRight: Radius.circular(0),
+                                bottomRight: Radius.circular(25),
+                                bottomLeft: Radius.circular(0)
+                            )
+                        ),
+                        child: Icon(Icons.qr_code_scanner_outlined,color: Colors.white,size: height/20,),
+                      ),
                     ),
                     SizedBox(
                       height: height/80,
                     ),
-                    const Text("",
+                    const Text("QR",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.black

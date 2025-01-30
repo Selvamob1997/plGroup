@@ -23,6 +23,7 @@ class loginScreenController extends GetxController{
 
   var branchName = TextEditingController();
   var branchCode='0';
+  var branchSubCode='';
 
 
   @override
@@ -49,6 +50,7 @@ class loginScreenController extends GetxController{
               GetBranch(
                 rawBranchModel.result![j].bPLId,
                 rawBranchModel.result![j].bPLName,
+                rawBranchModel.result![j].code,
               ),
           ),
           update(),
@@ -82,7 +84,13 @@ class loginScreenController extends GetxController{
               jsonDecode(value.body)['result'][0]['firstName'],
               jsonDecode(value.body)['result'][0]['empID'],
               branchName.text,
-              branchCode),
+              branchCode,branchSubCode,
+            jsonDecode(value.body)['result'][0]['DBName'],
+            jsonDecode(value.body)['result'][0]['UserName'],
+            jsonDecode(value.body)['result'][0]['Password'],
+
+
+          ),
 
 
         }else {
@@ -113,7 +121,7 @@ class loginScreenController extends GetxController{
   }
 
 
-  setSession(name,empno,branchName,branchCode) async {
+  setSession(name,empno,branchName,branchCode,branchSubCode,dbName,usename,password) async {
 
     Future<SharedPreferences> prefs1 = SharedPreferences.getInstance();
     final SharedPreferences prefs = await prefs1;
@@ -121,6 +129,10 @@ class loginScreenController extends GetxController{
     prefs.setString("EmpNo",empno.toString());
     prefs.setString("branchName",branchName.toString());
     prefs.setString("branchCode",branchCode.toString());
+    prefs.setString("branchSubCode",branchSubCode.toString());
+    prefs.setString("DBName",dbName.toString());
+    prefs.setString("UserName",usename.toString());
+    prefs.setString("Password",password.toString());
     prefs.setString("Status", "Login");
     update();
     routemanagement.gotodashBoard();
@@ -131,8 +143,9 @@ class loginScreenController extends GetxController{
 class GetBranch {
   var bPLId;
   String? bPLName;
+  String? code;
 
-  GetBranch(this.bPLId, this.bPLName);
+  GetBranch(this.bPLId, this.bPLName,this.code);
 
 
 }

@@ -81,6 +81,7 @@ class loginScreenPage extends GetView<loginScreenController> {
 
                                       myController.branchName.text = myController.secGetBranch[index].bPLName.toString();
                                       myController.branchCode = myController.secGetBranch[index].bPLId.toString();
+                                      myController.branchSubCode = myController.secGetBranch[index].code.toString();
 
                                       Navigator.pop(context,);
 
