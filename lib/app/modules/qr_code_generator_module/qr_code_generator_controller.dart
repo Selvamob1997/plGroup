@@ -153,6 +153,7 @@ class QrCodeGeneratorController extends GetxController{
                         onTap: () {
                           // secScanInventoryModel[index].toWhsCode = secWhsCode[index].whsName.toString();
                           // secScanInventoryModel[index].toWhsCode = secWhsCode[index].whsName.toString();
+                          whsCode = secScreenDisplaySoData[index].whsCode;
                           secScreenDisplaySoData[index].whsCode = secWhsCode[ind].whsCode.toString();
                           update();
 
