@@ -142,7 +142,7 @@ abstract class Utility {
 
   /// Close any open snackbar
   static void closeSnackbar() {
-    if (Get.isSnackbarOpen ?? false) Get.back<void>();
+    if (Get.isSnackbarOpen) Get.back<void>();
   }
 
 

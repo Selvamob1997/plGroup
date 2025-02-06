@@ -15,7 +15,7 @@ class ScaningQrcodePage extends GetView<ScaningQrcodeController> {
       child: Scaffold(
         appBar: AppBar(
           //centerTitle: true,
-          title:  const Text("Scaning"),
+          title:  const Text("QR View"),
           backgroundColor: ColorsValue.primaryColor,
           actions: [
             IconButton(

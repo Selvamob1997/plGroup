@@ -20,7 +20,7 @@ class QrCodeGeneratorPage extends GetView<QrCodeGeneratorController> {
             backgroundColor: Colors.white,
             appBar: AppBar(
               //centerTitle: true,
-              title:  const Text("QR Live Print"),
+              title:  const Text("QR Generation"),
               backgroundColor: ColorsValue.primaryColor,
             ),
             body: SizedBox(
@@ -180,12 +180,18 @@ class QrCodeGeneratorPage extends GetView<QrCodeGeneratorController> {
                                                 alignment: Alignment.centerLeft,
                                                 child: const Text(":"),
                                               ),
-                                              Container(
-                                                height: height/48,
-                                                width: width/3.5,
-                                                alignment: Alignment.centerLeft,
-                                                child: Text(myController.secScreenDisplaySoData[index].whsCode.toString(),style: const TextStyle(color: Colors.black,fontWeight: FontWeight.w500),),
+                                              InkWell(
+                                                onTap: (){
+                                                  myController.showgWhsCode(context, height, index);
+                                                },
+                                                child: Container(
+                                                  height: height/48,
+                                                  width: width/3.5,
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Text(myController.secScreenDisplaySoData[index].whsCode.toString(),style: const TextStyle(color: Colors.black,fontWeight: FontWeight.w500),),
+                                                ),
                                               ),
+
                                               Container(
                                                 height: height/48,
                                                 width: width/6.5,

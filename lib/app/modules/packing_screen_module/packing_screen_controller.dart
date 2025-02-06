@@ -123,7 +123,7 @@ class packingScreenController extends GetxController {
        pairs[thisKV[0]] = thisKV[1].trim();
      }
      var encoded = json.encode(pairs);
-     //log(encoded);
+     log(encoded);
      final newdecode = jsonDecode(encoded);
      rawQrScan = QrScan.fromJson(newdecode);
      //print(decode["QRDocEntry"].toString());
@@ -134,7 +134,7 @@ class packingScreenController extends GetxController {
 
          decode= jsonDecode(value.body),
 
-         //print(value.body),
+         print(value.body),
          //print(decode[0]["Header Item"].toString()),
          //print(decode[0]['ItemCode'],),
          update(),

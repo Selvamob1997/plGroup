@@ -497,6 +497,27 @@ class api_call {
     return response;
   }
 
+  static Future<http.Response> inventoryPostin(String Cookie,body) async {
+    //SapRefNo='0';
+    String str = "#@F&L^&%U##T#T@#ER###CA@#@M*(PU@&#S%^%2324@*(^&";
+    String result = str.replaceAll(RegExp('[^A-Za-z0-9]'), '');
+    print(result);
+
+    Map<String, String> headers = {
+      "Content-Type": "application/json",
+      "Cookie": Cookie,
+    };
+
+    log(jsonEncode(body));
+
+    final response = await http.post(Uri.parse('${SAP_URL}b1s/v1/StockTransfers'),
+        headers: headers,
+        body: jsonEncode(body));
+    log(response.body);
+
+    return response;
+  }
+
 
 }
 

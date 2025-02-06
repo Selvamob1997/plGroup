@@ -10,6 +10,7 @@ import 'package:pl_groups/app/data/model/QRMaterModel.dart';
 import 'package:pl_groups/app/data/model/QrOrderTypeModel.dart';
 import 'package:pl_groups/app/data/model/SaleOrderDetailsModel.dart';
 import 'package:pl_groups/app/data/model/SaleOrderGetModel.dart';
+import 'package:pl_groups/app/data/model/WhsCodeModel.dart';
 import 'package:pl_groups/app/data/repository/api_call.dart';
 import 'package:pl_groups/app/utils/utility.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,6 +57,12 @@ class QrCodeGeneratorController extends GetxController{
   String itemDetailXML = "";
   String itemDetailXML1 = "";
 
+
+  late WhsCodeModel rawWhsCodeModel;
+  List<WhsCode>secWhsCode=[];
+  String? whsCode = '';
+  var whsName = TextEditingController();
+
  @override
   void onInit() {
     // TODO: implement onInit
@@ -101,8 +108,70 @@ class QrCodeGeneratorController extends GetxController{
           ),
         },
         Utility.closeLoader(),
+        getWhsCode(),
       }
     });
+  }
+
+  getWhsCode(){
+    api_call.getAllMaster(6, "soNo", "docEntry", sessionCode, cardCode.text, sessionBranchCode, true).then((value) => {
+      if(value.statusCode == 200){
+        print(value.body),
+        rawWhsCodeModel = WhsCodeModel.fromJson(jsonDecode(value.body)),
+        for(int j=0;j<rawWhsCodeModel.result!.length;j++){
+          secWhsCode.add(
+            WhsCode(
+                rawWhsCodeModel.result![j].whsCode,
+                rawWhsCodeModel.result![j].whsName),
+          )
+        },
+        Utility.closeLoader(),
+        update(),
+
+      }else{
+        Utility.closeLoader(),
+        update(),
+      }
+    });
+  }
+
+  showgWhsCode(BuildContext context, double height,index){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, StateSetter setState) {
+          return AlertDialog(
+              title: Text('Order Type'),
+              content: SizedBox(
+                  width: double.minPositive,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: secWhsCode.length,
+                    itemBuilder: (BuildContext context, int ind) {
+                      return ListTile(
+                        title: Text("${secWhsCode[ind].whsCode} - ${secWhsCode[ind].whsName}"),
+                        onTap: () {
+                          // secScanInventoryModel[index].toWhsCode = secWhsCode[index].whsName.toString();
+                          // secScanInventoryModel[index].toWhsCode = secWhsCode[index].whsName.toString();
+                          secScreenDisplaySoData[index].whsCode = secWhsCode[ind].whsCode.toString();
+                          update();
+
+
+
+                          Get.back();
+
+
+                        },
+                      );
+                    },
+                  ))
+
+          );
+        },
+        );
+
+      },
+    );
   }
 
 
@@ -720,7 +789,7 @@ class QrCodeGeneratorController extends GetxController{
   void myListClear(order, String code) {
     soDetalis = false;
     orderType.text = order.toString();
-    orderTypeCode.text = order.toString();
+    orderTypeCode.text = code.toString();
     cardCode.text = '';
     cardName.text = '';
     productCode.text = '';
@@ -879,16 +948,16 @@ class QrCodeGeneratorController extends GetxController{
             for(int j=0;j<secScreenDisplaySoData.length;j++)
               {
 
-                  "U_SoEntry": orderType.text == "Make To Order"?secScreenDisplaySoData[j].soEntry:null,
-                  "U_SoDocNum": orderType.text == "Make To Order"?secScreenDisplaySoData[j].soNum:null,
-                  "U_BaseLine": orderType.text == "Make To Order"?secScreenDisplaySoData[j].baseLine:null,
-                  "U_CardCode": orderType.text == "Make To Order"?cardCode.text:null,
-                  "U_CardName": orderType.text == "Make To Order"?cardName.text:null,
+                  "U_SoEntry": secScreenDisplaySoData[j].soEntry,
+                  "U_SoDocNum": secScreenDisplaySoData[j].soNum,
+                  "U_BaseLine": secScreenDisplaySoData[j].baseLine,
+                  "U_CardCode": cardCode.text,
+                  "U_CardName": cardName.text,
                   "U_ReqDate": DateFormat('yyyy-MM-dd').format(DateTime.now()),
-                  "U_ItemCode": orderType.text == "Make To Order"?secScreenDisplaySoData[j].itemCode:null,
-                  "U_ItemName": orderType.text == "Make To Order"?secScreenDisplaySoData[j].itemName:null,
-                  "U_Quantity": orderType.text == "Make To Order"?secScreenDisplaySoData[j].quantity:null,
-                  "U_BundInfo": orderType.text == "Make To Order"?secScreenBundle.length + 1:null,
+                  "U_ItemCode": secScreenDisplaySoData[j].itemCode,
+                  "U_ItemName": secScreenDisplaySoData[j].itemName,
+                  "U_Quantity": secScreenDisplaySoData[j].quantity,
+                  "U_BundInfo": secScreenBundle.length,
 
                 "U_QltRexine": secScreenDisplaySoData[j].varible1,
                 "U_EmbossRexine": secScreenDisplaySoData[j].varible2,
@@ -924,7 +993,7 @@ class QrCodeGeneratorController extends GetxController{
                 "U_GIEntry": "",
                 "U_GIStatus": "NP",
                 "U_ProdStatus": "NP",
-                "U_ProdEntry": "12"
+                "U_ProdEntry": null
               },
           ]
         };
@@ -1180,7 +1249,14 @@ class MasterResult {
 
 }
 
+class WhsCode {
+  String? whsCode;
+  String? whsName;
 
+  WhsCode(this.whsCode, this.whsName);
+
+
+}
 
 
 

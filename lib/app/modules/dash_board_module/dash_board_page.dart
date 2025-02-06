@@ -183,7 +183,7 @@ class DashBoardPage extends GetView<DashBoardController> {
                     SizedBox(
                       height: height/80,
                     ),
-                    const Text("Scaning",
+                    const Text("QR View",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.black
@@ -217,7 +217,7 @@ class DashBoardPage extends GetView<DashBoardController> {
                     SizedBox(
                       height: height/80,
                     ),
-                    const Text("QR",
+                    const Text("QR Generation",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.black
@@ -225,7 +225,55 @@ class DashBoardPage extends GetView<DashBoardController> {
                   ],
                 ),
               ],
+            ),
+            SizedBox(height: height/30,),
+
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Scan Barcode Widget
+                Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        // Navigator.push(context, MaterialPageRoute(builder: (builder) => Report_screen()));
+                        // ScanQR(0);
+                        myController.navigationCtr(5);
+                      },
+                      child: Container(
+                        height: height/8,
+                        width: width/2.5,
+                        decoration: const BoxDecoration(
+                            color: ColorsValue.primaryColor,
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(25),
+                                topRight: Radius.circular(0),
+                                bottomRight: Radius.circular(25),
+                                bottomLeft: Radius.circular(0)
+                            )
+                        ),
+                        child: Icon(Icons.inventory_outlined,color: Colors.white,size: height/20,),
+                      ),
+                    ),
+                    SizedBox(
+                      height: height/80,
+                    ),
+                    const Text("Stock Transfer",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black
+                      ),)
+                  ],
+                ),
+                // Issue to Production Widget
+                SizedBox(
+                  height: height/8,
+                  width: width/2.5,
+                )
+              ],
             )
+
 
           ],
         ),

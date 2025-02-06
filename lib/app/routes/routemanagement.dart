@@ -31,6 +31,8 @@ abstract class routemanagement {
   }
   static void gotoQRScaning() {
     Get.toNamed(Routes.QR_CODE_GENERATOR);
+  }static void gotoInventory() {
+    Get.toNamed(Routes.INVENTORY_SCREEN);
   }
 
 }

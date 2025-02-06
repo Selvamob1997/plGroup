@@ -45,6 +45,8 @@ class DashBoardController extends GetxController{
       routemanagement.gotoScaning();
     }else if(i==4){
       routemanagement.gotoQRScaning();
+    }else if(i==5){
+      routemanagement.gotoInventory();
     }
     update();
   }

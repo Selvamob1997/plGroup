@@ -1,3 +1,5 @@
+import '../../app/modules/inventory_screen_module/inventory_screen_page.dart';
+import '../../app/modules/inventory_screen_module/inventory_screen_bindings.dart';
 import '../../app/modules/qr_code_generator_module/qr_code_generator_page.dart';
 import '../../app/modules/qr_code_generator_module/qr_code_generator_bindings.dart';
 import '../../app/modules/scaning_qrcode_module/scaning_qrcode_page.dart';
@@ -57,6 +59,11 @@ abstract class AppPages {
       name: Routes.QR_CODE_GENERATOR,
       page: () => QrCodeGeneratorPage(),
       binding: QrCodeGeneratorBinding(),
+    ),
+    GetPage(
+      name: Routes.INVENTORY_SCREEN,
+      page: () => InventoryScreenPage(),
+      binding: InventoryScreenBinding(),
     ),
   ];
 }
